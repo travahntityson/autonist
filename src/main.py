@@ -18,6 +18,8 @@ templates = Jinja2Templates(directory="src/templates")
 app.include_router(audit.router)
 app.include_router(evidence.router)
 app.include_router(reporting.router)
+from src.api import export
+app.include_router(export.router)
 
 DATA_DIR = Path("data/evidence")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
