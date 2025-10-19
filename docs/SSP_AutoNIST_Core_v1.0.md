@@ -2716,14 +2716,14 @@ This appendix describes its data-flow architecture, pipelines, metrics, and esca
 
 ```mermaid
 flowchart TD
-    A[Data Sources] --> B[Evidence Collector]
-    B --> C[Evidence Normalizer]
-    C --> D[Encrypted Evidence Store]
-    D --> E[Compliance Mapping Engine]
-    E --> F[Control Catalog (NIST 800-53 / FedRAMP)]
-    F --> G[Dashboard & Alerts]
-    G --> H[POA&M Generator]
-    G --> I[Authorization Dashboard (AO Portal)]
+    A["Data Sources"] --> B["Evidence Collector"]
+    B --> C["Evidence Normalizer"]
+    C --> D["Evidence Store (S3 or GovCloud)"]
+    D --> E["Compliance Mapping Engine"]
+    E --> F["Control Catalog (NIST 800-53 / FedRAMP)"]
+    F --> G["Dashboard & Alerts"]
+    G --> H["POA&M Generator"]
+    G --> I["Authorization Dashboard (AO Portal)"]
 Component Summary
 
 Data Sources → Logs, scans, tickets, and telemetry
