@@ -870,3 +870,608 @@ In the air-gapped deployment, local CAC/PIV credentials are used; in the cloud d
 **Residual Risk:** Low – CAC/PIV integration automation in progress.  
 **Next Milestones:** Implement FIDO2 WebAuthn support; finalize adaptive MFA rollout for privileged access.
 
+## 9  Control Family – Incident Response (IR)
+
+### Family Summary
+The Incident Response (IR) family ensures AutoNIST Core can effectively detect, report, analyze, and respond to cybersecurity incidents to minimize impact and prevent recurrence.  
+The system provides a dedicated Incident Response Hub that integrates with the Continuous Control Monitoring (CCM) engine to automate detection, escalation, and evidence collection aligned with NIST SP 800-61r2 guidance.
+
+---
+
+### IR-1 – Incident Response Policy and Procedures
+- **Implementation:**  
+  Defined in `/docs/policies/IR-Policy.md`. Establishes an incident response capability consistent with NIST SP 800-61.  
+  Procedures detail incident classification (low, moderate, high), response roles, reporting timelines, and coordination with US-CERT or DoD Cyber Crime Center (DC3) when applicable.  
+- **Responsible Role:** ISSO / System Owner  
+- **Assessment Method:** *Examine* IR-Policy; *Interview* ISSO  
+- **Evidence:** `IR-Policy.md`  
+
+---
+
+### IR-2 – Incident Response Training
+- **Implementation:**  
+  All system administrators and assessors receive annual incident response training covering detection, analysis, containment, eradication, and recovery phases.  
+  Completion tracked through Evidence Store.  
+- **Responsible Role:** ISSO / HR  
+- **Assessment Method:** *Examine* training logs; *Interview* IR personnel  
+- **Evidence:** `evidence/training_records.json`; LMS integration logs  
+
+---
+
+### IR-3 – Incident Response Testing (+ Enhancements 1, 2)
+- **Implementation:**  
+  Annual incident response exercises simulate realistic attack scenarios.  
+  Enhancement (IR-3 (1)): Includes unannounced detection and response drills.  
+  Enhancement (IR-3 (2)): Test results captured as part of continuous improvement metrics.  
+- **Responsible Role:** ISSO / Security Analyst  
+- **Assessment Method:** *Test* IR exercises; *Examine* after-action report  
+- **Evidence:** `reports/ir_tabletop_exercise_YYYY.pdf`; POA&M entries  
+
+---
+
+### IR-4 – Incident Handling (+ Enhancements 1–6)
+- **Implementation:**  
+  Incident handling process follows the NIST 800-61 lifecycle: **Preparation → Detection → Analysis → Containment → Eradication → Recovery → Lessons Learned.**  
+  - (IR-4 (1)): Automated detection rules in CCM Engine generate alerts for unauthorized changes or control failures.  
+  - (IR-4 (2)): Incidents automatically assigned severity and ticket ID.  
+  - (IR-4 (4)): Coordination maintained with affected stakeholders.  
+  - (IR-4 (6)): Response evidence logged and linked to POA&M entries.  
+- **Responsible Role:** ISSO / SOC Analyst  
+- **Assessment Method:** *Test* simulated incident; *Examine* IR workflow logs  
+- **Evidence:** `src/services/ccm_engine.py`; `ir_response_workflow.json`  
+
+---
+
+### IR-5 – Incident Monitoring
+- **Implementation:**  
+  Continuous monitoring performed by CCM Engine; correlates system logs, authentication events, and external threat intelligence feeds.  
+  Alerts routed to the Incident Response Hub dashboard.  
+- **Responsible Role:** Security Analyst / ISSO  
+- **Assessment Method:** *Test* monitoring alert flow; *Examine* incident dashboard  
+- **Evidence:** `ConMon_dashboard.json`; audit trail excerpts  
+
+---
+
+### IR-6 – Incident Reporting (+ Enhancements 1, 2)
+- **Implementation:**  
+  Users can report incidents through a secure web form or API endpoint.  
+  Enhancement (IR-6 (1)): Automatic reporting to AO for all high-severity incidents.  
+  Enhancement (IR-6 (2)): External reporting to appropriate authorities based on classification.  
+- **Responsible Role:** ISSO / System Owner  
+- **Assessment Method:** *Test* reporting process; *Examine* incident tickets  
+- **Evidence:** `src/api/incident_reporting.py`; `incident_tickets.csv`  
+
+---
+
+### IR-7 – Incident Response Assistance
+- **Implementation:**  
+  Incident response assistance provided by internal security engineering team or contracted 3PAO assessors.  
+  24/7 contact information maintained in Incident Response Plan.  
+- **Responsible Role:** System Owner / AO  
+- **Assessment Method:** *Interview* IR team; *Examine* support contracts  
+- **Evidence:** `Incident_Response_Plan.md`; contact roster  
+
+---
+
+### IR-8 – Incident Response Plan (+ Enhancements 1, 2, 3)
+- **Implementation:**  
+  Comprehensive plan defines response procedures, communication flow, escalation paths, and post-incident review.  
+  Enhancement (IR-8 (1)): Includes recovery objectives and business impact thresholds.  
+  Enhancement (IR-8 (2)): Reviewed semi-annually.  
+  Enhancement (IR-8 (3)): Lessons learned incorporated into plan revisions.  
+- **Responsible Role:** ISSO / System Owner  
+- **Assessment Method:** *Examine* IR Plan; *Interview* recovery team  
+- **Evidence:** `/docs/Incident_Response_Plan.md`; revision logs  
+
+---
+
+### IR-9 – Information Spillage Response (Organizational Enhancement)
+- **Implementation:**  
+  Defines containment and cleanup steps for spillage of CUI or classified data.  
+  Automatic quarantine triggered via DLP rules.  
+- **Responsible Role:** ISSO / AO  
+- **Assessment Method:** *Test* spillage scenario; *Examine* containment report  
+- **Evidence:** `data_loss_prevention_rules.yaml`; spillage remediation logs  
+
+---
+
+### IR-10 – Integrated Incident Response (Organizational Enhancement)
+- **Implementation:**  
+  Integrates incident response metrics with risk and compliance systems.  
+  Findings automatically linked to RMF package updates in AutoNIST Core.  
+- **Responsible Role:** ISSO / System Owner  
+- **Assessment Method:** *Examine* correlation logs; *Interview* risk officer  
+- **Evidence:** `src/services/rmf_integration.py`  
+
+---
+
+### Incident Response Family Assessment Summary
+| Control Count | Fully Implemented | Partially | Inherited | Not Applicable |
+| :-- | :--: | :--: | :--: | :--: |
+| 10 | 9 | 1 | 0 | 0 |
+
+**Residual Risk:** Low – automation for external agency reporting pending.  
+**Next Milestones:** Complete DLP rule testing for CUI containment; enhance dashboard integration for cross-control incident correlation.
+
+## 10  Control Family – Maintenance (MA)
+
+### Family Summary
+The Maintenance (MA) family ensures AutoNIST Core systems are maintained securely and consistently, both onsite and remotely.  
+Maintenance includes timely updates, vulnerability remediation, patch validation, and documentation of all maintenance activities in accordance with NIST SP 800-53 Rev. 5 and FedRAMP High requirements.  
+All maintenance actions are logged, authorized, and reviewed through the Change Control Board (CCB).
+
+---
+
+### MA-1 – System Maintenance Policy and Procedures
+- **Implementation:**  
+  Documented in `/docs/policies/MA-Policy.md`.  
+  Defines approved maintenance schedules, authorization procedures, maintenance personnel requirements, and security verification steps.  
+  Procedures distinguish between routine and emergency maintenance.  
+- **Responsible Role:** System Owner / Configuration Manager  
+- **Assessment Method:** *Examine* MA-Policy; *Interview* CM Lead  
+- **Evidence:** `MA-Policy.md`  
+
+---
+
+### MA-2 – Controlled Maintenance (+ Enhancements 1, 2)
+- **Implementation:**  
+  All maintenance is scheduled and approved through the ticketing system.  
+  Enhancement (MA-2 (1)): Pre- and post-maintenance security checks are required.  
+  Enhancement (MA-2 (2)): Maintenance logs retained for 18 months minimum.  
+  Maintenance events recorded automatically in `maintenance_records.json`.  
+- **Responsible Role:** System Administrator / ISSO  
+- **Assessment Method:** *Examine* maintenance logs; *Interview* admin  
+- **Evidence:** `maintenance_records.json`; change approval tickets  
+
+---
+
+### MA-3 – Maintenance Tools (+ Enhancements 1, 2)
+- **Implementation:**  
+  Maintenance tools approved and validated before use.  
+  Enhancement (MA-3 (1)): Tools verified to contain no malicious code.  
+  Enhancement (MA-3 (2)): Tool inventories reviewed quarterly and updated in the CMDB.  
+- **Responsible Role:** Configuration Manager / DevSecOps  
+- **Assessment Method:** *Test* tool validation; *Examine* tool inventory  
+- **Evidence:** `tool_inventory.csv`; anti-malware scan logs  
+
+---
+
+### MA-4 – Nonlocal Maintenance (+ Enhancements 1, 2)
+- **Implementation:**  
+  Remote maintenance permitted only through approved VPN with TLS 1.3 and MFA.  
+  Enhancement (MA-4 (1)): Remote sessions monitored and logged.  
+  Enhancement (MA-4 (2)): Sessions terminated automatically after 15 minutes of inactivity.  
+  In air-gapped environments, all remote maintenance is prohibited.  
+- **Responsible Role:** Network Engineer / ISSO  
+- **Assessment Method:** *Test* VPN session; *Examine* remote session logs  
+- **Evidence:** `/config/vpn.conf`; `remote_session_log.json`  
+
+---
+
+### MA-5 – Maintenance Personnel (+ Enhancements 1, 2)
+- **Implementation:**  
+  Only authorized, background-checked personnel perform maintenance.  
+  Enhancement (MA-5 (1)): Access lists maintained and reviewed quarterly.  
+  Enhancement (MA-5 (2)): Temporary maintenance personnel escorted or monitored during sessions.  
+- **Responsible Role:** ISSO / HR  
+- **Assessment Method:** *Examine* personnel authorization lists; *Interview* ISSO  
+- **Evidence:** `authorized_personnel_list.csv`; HR clearance records  
+
+---
+
+### MA-6 – Timely Maintenance
+- **Implementation:**  
+  Maintenance scheduled based on severity of identified vulnerabilities and system health reports.  
+  Critical security patches applied within 72 hours of release or discovery.  
+- **Responsible Role:** System Administrator / DevSecOps  
+- **Assessment Method:** *Examine* patch schedule; *Test* update workflow  
+- **Evidence:** `patch_schedule.yml`; system patch logs  
+
+---
+
+### MA-7 – Field Maintenance
+- **Implementation:**  
+  Field maintenance activities on hardware components occur only within secure controlled facilities.  
+  Equipment sanitized or encrypted before removal.  
+- **Responsible Role:** System Owner / Maintenance Technician  
+- **Assessment Method:** *Interview* maintenance staff; *Examine* field maintenance logs  
+- **Evidence:** `field_maintenance_log.json`; chain-of-custody forms  
+
+---
+
+### MA-8 – Maintenance Monitoring and Review
+- **Implementation:**  
+  All maintenance actions monitored by the ISSO.  
+  Random spot checks conducted monthly to verify authorization and documentation accuracy.  
+- **Responsible Role:** ISSO / Configuration Manager  
+- **Assessment Method:** *Examine* audit records; *Interview* ISSO  
+- **Evidence:** `maintenance_review_report.pdf`  
+
+---
+
+### MA-9 – Maintenance Automation (Organizational Enhancement)
+- **Implementation:**  
+  AutoNIST Core automates patch verification, configuration validation, and reporting through the Continuous Control Monitoring (CCM) engine.  
+  Maintenance data automatically populates the POA&M when anomalies are detected.  
+- **Responsible Role:** DevSecOps Engineer / ISSO  
+- **Assessment Method:** *Test* CCM automation; *Examine* maintenance API logs  
+- **Evidence:** `src/services/ccm_engine.py`; `poam_generator.py`  
+
+---
+
+### Maintenance Family Assessment Summary
+| Control Count | Fully Implemented | Partially | Inherited | Not Applicable |
+| :-- | :--: | :--: | :--: | :--: |
+| 9 | 8 | 1 | 0 | 0 |
+
+**Residual Risk:** Low – additional automation for third-party tool validation in progress.  
+**Next Milestones:** Integrate patch cycle reporting into ConMon dashboard; finalize digital signatures for tool integrity verification.
+## 11  Control Family – Media Protection (MP)
+
+### Family Summary
+The Media Protection (MP) family ensures AutoNIST Core protects digital and physical media containing sensitive information from unauthorized access, use, or disposal.  
+Controls include encryption of digital media, physical access restrictions, secure data sanitization, and strict handling procedures for both removable and backup media.
+
+---
+
+### MP-1 – Media Protection Policy and Procedures
+- **Implementation:**  
+  Defined in `/docs/policies/MP-Policy.md`. Establishes requirements for media labeling, transport, encryption, and destruction.  
+  Procedures specify how digital and physical media are managed throughout their lifecycle.  
+- **Responsible Role:** ISSO / System Owner  
+- **Assessment Method:** *Examine* MP-Policy; *Interview* ISSO  
+- **Evidence:** `MP-Policy.md`  
+
+---
+
+### MP-2 – Media Access (+ Enhancements 1, 2)
+- **Implementation:**  
+  Access to removable and backup media restricted to authorized personnel only.  
+  Enhancement (MP-2 (1)): Access logs reviewed weekly.  
+  Enhancement (MP-2 (2)): Access automatically revoked when personnel leave the organization.  
+- **Responsible Role:** System Owner / Security Officer  
+- **Assessment Method:** *Examine* access logs; *Interview* admin  
+- **Evidence:** `media_access_log.json`; HR offboarding records  
+
+---
+
+### MP-3 – Media Marking (+ Enhancements 1, 2)
+- **Implementation:**  
+  All physical and digital media labeled with appropriate sensitivity markings (e.g., “CUI,” “Internal Use Only”).  
+  Enhancement (MP-3 (1)): Labels automatically applied to exported digital files.  
+  Enhancement (MP-3 (2)): Visual indicators embedded into exported reports and evidence bundles.  
+- **Responsible Role:** ISSO / System Owner  
+- **Assessment Method:** *Examine* sample media; *Test* export labeling  
+- **Evidence:** `src/services/oscal_exporter.py`; `label_config.yaml`  
+
+---
+
+### MP-4 – Media Storage (+ Enhancements 1, 2)
+- **Implementation:**  
+  All media encrypted using AES-256 and stored in secured environments.  
+  Enhancement (MP-4 (1)): Encryption keys rotated every 90 days.  
+  Enhancement (MP-4 (2)): Access limited to personnel with clearance commensurate with data sensitivity.  
+- **Responsible Role:** System Administrator / ISSO  
+- **Assessment Method:** *Test* encryption/decryption; *Examine* key management logs  
+- **Evidence:** `/config/encryption_policy.json`; key rotation logs  
+
+---
+
+### MP-5 – Media Transport (+ Enhancements 1, 2, 3)
+- **Implementation:**  
+  Media transported only in encrypted form.  
+  Enhancement (MP-5 (1)): Courier verification required before media release.  
+  Enhancement (MP-5 (2)): Transfer authorization logged and approved.  
+  Enhancement (MP-5 (3)): Digital evidence transfer validated by hash verification.  
+- **Responsible Role:** ISSO / Transport Custodian  
+- **Assessment Method:** *Examine* transport logs; *Interview* custodian  
+- **Evidence:** `media_transport_log.json`; SHA-384 hash reports  
+
+---
+
+### MP-6 – Media Sanitization (+ Enhancements 1, 2, 3)
+- **Implementation:**  
+  Sanitization procedures follow DoD 5220.22-M and NIST SP 800-88 Rev. 1.  
+  Enhancement (MP-6 (1)): Sanitization verified by independent review.  
+  Enhancement (MP-6 (2)): Destruction logs digitally signed.  
+  Enhancement (MP-6 (3)): Cryptographic erasure used for SSDs.  
+- **Responsible Role:** System Owner / Security Officer  
+- **Assessment Method:** *Test* sanitization procedure; *Examine* destruction log  
+- **Evidence:** `media_destruction_log.json`; sanitization checklist  
+
+---
+
+### MP-7 – Media Use (+ Enhancements 1, 2)
+- **Implementation:**  
+  Use of removable media restricted to approved secure USB devices or encrypted drives.  
+  Enhancement (MP-7 (1)): System automatically disables unapproved devices.  
+  Enhancement (MP-7 (2)): Removable media use monitored by CCM Engine.  
+- **Responsible Role:** ISSO / DevSecOps  
+- **Assessment Method:** *Test* USB restrictions; *Examine* monitoring reports  
+- **Evidence:** `device_whitelist.yaml`; `ccm_engine.log`  
+
+---
+
+### MP-8 – Media Downgrading (Organizational Enhancement)
+- **Implementation:**  
+  Procedures defined for reviewing and approving the downgrading or declassification of data on digital media.  
+  Approval requires AO and ISSO concurrence.  
+- **Responsible Role:** AO / ISSO  
+- **Assessment Method:** *Examine* downgrading request forms; *Interview* AO  
+- **Evidence:** `media_downgrade_request.md`; approval logs  
+
+---
+
+### Media Protection Family Assessment Summary
+| Control Count | Fully Implemented | Partially | Inherited | Not Applicable |
+| :-- | :--: | :--: | :--: | :--: |
+| 8 | 7 | 1 | 0 | 0 |
+
+**Residual Risk:** Low – ongoing automation of transport chain-of-custody verification.  
+**Next Milestones:** Deploy automatic labeling for evidence bundles; finalize DoD 5220.22-M verification module integration.
+## 12  Control Family – Physical and Environmental Protection (PE)
+
+### Family Summary
+The Physical and Environmental Protection (PE) family safeguards AutoNIST Core’s physical infrastructure and environmental conditions that support the system’s hardware and hosting environments.  
+This includes physical access control, surveillance, environmental monitoring, visitor management, and contingency measures to prevent damage, theft, or disruption of system components.  
+Most PE controls are **inherited** from the hosting facility—whether air-gapped data center or FedRAMP-authorized cloud (AWS GovCloud, Azure GCCH, or on-prem enclave).
+
+---
+
+### PE-1 – Physical and Environmental Protection Policy and Procedures
+- **Implementation:**  
+  Documented in `/docs/policies/PE-Policy.md`. Establishes physical security controls for facilities, data centers, and co-location environments.  
+  The policy defines access authorization procedures, visitor management, and environmental safeguard requirements.  
+- **Responsible Role:** Facility Security Officer (FSO) / System Owner  
+- **Assessment Method:** *Examine* PE-Policy; *Interview* FSO  
+- **Evidence:** `PE-Policy.md`  
+
+---
+
+### PE-2 – Physical Access Authorizations (+ Enhancements 1, 2)
+- **Implementation:**  
+  Physical access granted only to authorized personnel with verified background checks.  
+  Enhancement (PE-2 (1)): Authorization lists reviewed quarterly by the FSO.  
+  Enhancement (PE-2 (2)): Revoked credentials removed within 24 hours of personnel departure.  
+- **Responsible Role:** Facility Security Officer / HR  
+- **Assessment Method:** *Examine* authorization records; *Interview* FSO  
+- **Evidence:** `facility_access_list.csv`; HR access removal reports  
+
+---
+
+### PE-3 – Physical Access Control (+ Enhancements 1–4)
+- **Implementation:**  
+  Physical entry to secure areas controlled via multi-factor authentication (badge + PIN or biometrics).  
+  Enhancement (PE-3 (1)): Access logs maintained for 12 months.  
+  Enhancement (PE-3 (2)): Video surveillance covers all entry points.  
+  Enhancement (PE-3 (3)): Alarms trigger for unauthorized access attempts.  
+  Enhancement (PE-3 (4)): Door contacts integrated with SOC monitoring system.  
+- **Responsible Role:** FSO / Security Operations  
+- **Assessment Method:** *Test* access control systems; *Examine* logs  
+- **Evidence:** Surveillance footage logs; entry control system reports  
+
+---
+
+### PE-4 – Access Control for Transmission Medium
+- **Implementation:**  
+  Network cabling and fiber routed through secured conduits and locked panels.  
+  Only authorized technicians permitted to handle media lines.  
+- **Responsible Role:** Network Engineer / FSO  
+- **Assessment Method:** *Interview* facility tech; *Examine* infrastructure layout  
+- **Evidence:** Cabling diagrams; facility floor plans  
+
+---
+
+### PE-5 – Access Control for Output Devices
+- **Implementation:**  
+  System consoles, printers, and monitors located in restricted areas to prevent data exposure.  
+  Output devices in shared areas configured to redact sensitive information.  
+- **Responsible Role:** ISSO / System Administrator  
+- **Assessment Method:** *Test* restricted access; *Examine* output logs  
+- **Evidence:** Configuration screenshots; print audit records  
+
+---
+
+### PE-6 – Monitoring Physical Access (+ Enhancements 1–3)
+- **Implementation:**  
+  Continuous monitoring through CCTV and intrusion detection systems.  
+  Enhancement (PE-6 (1)): Security personnel review logs daily.  
+  Enhancement (PE-6 (2)): Motion sensors integrated with building automation systems.  
+  Enhancement (PE-6 (3)): Incident alerts forwarded to SOC.  
+- **Responsible Role:** FSO / Security Operations  
+- **Assessment Method:** *Examine* surveillance logs; *Interview* security team  
+- **Evidence:** `facility_monitoring_logs.json`; alert summaries  
+
+---
+
+### PE-8 – Visitor Access Records (+ Enhancements 1, 2)
+- **Implementation:**  
+  Visitors must sign in, present ID, and be escorted at all times.  
+  Enhancement (PE-8 (1)): Visitor logs retained for one year minimum.  
+  Enhancement (PE-8 (2)): Digital visitor management system integrates with HR database.  
+- **Responsible Role:** FSO / Reception Security  
+- **Assessment Method:** *Examine* visitor logs; *Interview* facility staff  
+- **Evidence:** `visitor_logs.csv`; visitor badge system export  
+
+---
+
+### PE-9 – Power Equipment and Cabling
+- **Implementation:**  
+  Power cabling protected from damage and interference; redundant feeds supply critical systems.  
+  UPS and surge protection devices inspected quarterly.  
+- **Responsible Role:** Facility Engineer  
+- **Assessment Method:** *Examine* inspection logs; *Interview* facility engineer  
+- **Evidence:** Power inspection reports; UPS maintenance records  
+
+---
+
+### PE-10 – Emergency Shutoff
+- **Implementation:**  
+  Emergency power shutoff switches clearly labeled and located near exits.  
+  Procedures ensure safe shutdown of servers without data loss.  
+- **Responsible Role:** Facility Engineer / ISSO  
+- **Assessment Method:** *Test* emergency shutoff drills; *Examine* documentation  
+- **Evidence:** Safety diagrams; shutoff test reports  
+
+---
+
+### PE-11 – Emergency Power
+- **Implementation:**  
+  Data centers equipped with redundant UPS and generators providing at least 4 hours of runtime.  
+  Battery systems tested monthly and generators quarterly.  
+- **Responsible Role:** Facility Engineer / FSO  
+- **Assessment Method:** *Examine* maintenance logs; *Interview* facility team  
+- **Evidence:** Generator test reports; UPS inspection checklist  
+
+---
+
+### PE-12 – Emergency Lighting
+- **Implementation:**  
+  Emergency lighting installed along evacuation routes, server rooms, and critical areas.  
+  Inspected and tested semi-annually.  
+- **Responsible Role:** Facility Engineer  
+- **Assessment Method:** *Examine* inspection logs; *Test* lighting system  
+- **Evidence:** Lighting inspection records; facility safety plan  
+
+---
+
+### PE-13 – Fire Protection
+- **Implementation:**  
+  Fire suppression systems (FM-200 or inert gas) deployed in server areas.  
+  Smoke and heat detectors monitored continuously.  
+- **Responsible Role:** Facility Engineer / Safety Officer  
+- **Assessment Method:** *Examine* test certifications; *Interview* safety personnel  
+- **Evidence:** Fire system inspection certificates; alarm logs  
+
+---
+
+### PE-14 – Temperature and Humidity Controls
+- **Implementation:**  
+  HVAC systems maintain optimal environmental conditions (68–72°F, 40–60% RH).  
+  Monitored 24/7 with automated alerts for deviations.  
+- **Responsible Role:** Facility Engineer  
+- **Assessment Method:** *Examine* HVAC logs; *Interview* facility operator  
+- **Evidence:** Temperature/humidity reports; system dashboards  
+
+---
+
+### PE-15 – Water Damage Protection
+- **Implementation:**  
+  Server racks elevated; moisture sensors installed near drains and water lines.  
+  Automatic alerts trigger if leaks detected.  
+- **Responsible Role:** Facility Engineer  
+- **Assessment Method:** *Test* water sensors; *Examine* maintenance records  
+- **Evidence:** Leak detection test logs; facility blueprints  
+
+---
+
+### PE-16 – Delivery and Removal
+- **Implementation:**  
+  Equipment deliveries and removals require documented authorization.  
+  Asset tags verified upon entry and exit.  
+- **Responsible Role:** Facility Security Officer / Logistics  
+- **Assessment Method:** *Examine* delivery logs; *Interview* logistics staff  
+- **Evidence:** `delivery_tracking_log.json`; asset manifests  
+
+---
+
+### PE-17 – Alternate Work Site
+- **Implementation:**  
+  Authorized personnel may access system via secure remote environment using VPN and MFA during facility outages.  
+  Alternate work site adheres to same security and privacy standards as primary site.  
+- **Responsible Role:** AO / System Owner  
+- **Assessment Method:** *Test* alternate site connection; *Examine* access policies  
+- **Evidence:** Alternate site policy; VPN access reports  
+
+---
+
+### Physical and Environmental Protection Family Assessment Summary
+| Control Count | Fully Implemented | Partially | Inherited | Not Applicable |
+| :-- | :--: | :--: | :--: | :--: |
+| 16 | 4 | 1 | 11 | 0 |
+
+**Residual Risk:** Low – most controls inherited from facility provider.  
+**Next Milestones:** Obtain updated FedRAMP PE control inheritance statements; complete annual facility walk-through for on-prem enclave.
+
+## 13  Control Family – Planning (PL)
+
+### Family Summary
+The Planning (PL) family ensures AutoNIST Core’s security and privacy controls are properly documented, planned, and maintained throughout the system lifecycle.  
+Planning artifacts define how the system is authorized, protected, and monitored under the Risk Management Framework (RMF) and align with NIST SP 800-37, 800-53, and FedRAMP High baselines.  
+AutoNIST Core automatically generates and updates planning documentation, including the System Security Plan (SSP), Security Assessment Plan (SAP), and Security Assessment Report (SAR).
+
+---
+
+### PL-1 – Security Planning Policy and Procedures
+- **Implementation:**  
+  Defined in `/docs/policies/PL-Policy.md`.  
+  Establishes processes for creating, maintaining, and approving planning documentation such as the SSP, SAP, and POA&M.  
+  Procedures specify revision triggers (major changes, ATO renewal) and responsible parties (ISSO, AO, System Owner).  
+- **Responsible Role:** System Owner / ISSO  
+- **Assessment Method:** *Examine* PL-Policy; *Interview* ISSO  
+- **Evidence:** `PL-Policy.md`  
+
+---
+
+### PL-2 – System Security and Privacy Plan (+ Enhancements 1, 2, 3)
+- **Implementation:**  
+  AutoNIST Core generates the SSP in OSCAL and Markdown formats, including all required elements (system description, boundary, controls, and attachments).  
+  - (PL-2 (1)): SSP includes roles, responsibilities, and interconnection details.  
+  - (PL-2 (2)): Reviewed and updated quarterly or after major changes.  
+  - (PL-2 (3)): Maintained under version control in GitHub with digital signatures.  
+- **Responsible Role:** ISSO / System Owner  
+- **Assessment Method:** *Examine* SSP repository; *Test* automated generation  
+- **Evidence:** `/docs/SSP_AutoNIST_Core_v1.0.md`; `oscal_export.xml`  
+
+---
+
+### PL-4 – Rules of Behavior (+ Enhancements 1, 2)
+- **Implementation:**  
+  Rules of Behavior (RoB) established for all users and system administrators.  
+  - (PL-4 (1)): Users must electronically acknowledge RoB before system access.  
+  - (PL-4 (2)): Re-acknowledgment required annually or after policy updates.  
+- **Responsible Role:** System Owner / ISSO  
+- **Assessment Method:** *Examine* RoB records; *Interview* users  
+- **Evidence:** `docs/policies/Rules_of_Behavior.md`; signed user acknowledgment logs  
+
+---
+
+### PL-8 – Information Security Architecture (+ Enhancements 1, 2)
+- **Implementation:**  
+  AutoNIST Core’s architecture is documented and reviewed against NIST SP 800-160 and FedRAMP High guidelines.  
+  - (PL-8 (1)): Architecture diagrams illustrate data flow, trust boundaries, and interconnections.  
+  - (PL-8 (2)): Architecture reviewed annually to validate defense-in-depth controls.  
+- **Responsible Role:** DevSecOps Architect / ISSO  
+- **Assessment Method:** *Examine* architecture diagrams; *Interview* DevSecOps Lead  
+- **Evidence:** `/docs/architecture/System_Boundary_Diagram.png`; `data_flow_diagram.vsdx`  
+
+---
+
+### PL-9 – Central Management of Security and Privacy Plans
+- **Implementation:**  
+  All planning documentation centrally managed in the AutoNIST Core repository with access restricted to authorized personnel.  
+  Changes tracked through Git version control and reviewed via Change Control Board (CCB).  
+- **Responsible Role:** System Owner / Configuration Manager  
+- **Assessment Method:** *Examine* repo access logs; *Interview* CM Lead  
+- **Evidence:** GitHub repository settings; `change_control_board_minutes.md`  
+
+---
+
+### PL-10 – Baseline Selection and Tailoring (Organizational Enhancement)
+- **Implementation:**  
+  AutoNIST Core supports automated baseline selection (Low/Moderate/High) and tailoring per customer environment.  
+  System dynamically adjusts SSP contents to reflect chosen control baselines.  
+- **Responsible Role:** ISSO / System Owner  
+- **Assessment Method:** *Test* baseline selection feature; *Examine* generated SSP output  
+- **Evidence:** `src/services/baseline_selector.py`; `baseline_config.yaml`  
+
+---
+
+### Planning Family Assessment Summary
+| Control Count | Fully Implemented | Partially | Inherited | Not Applicable |
+| :-- | :--: | :--: | :--: | :--: |
+| 6 | 6 | 0 | 0 | 0 |
+
+**Residual Risk:** Very Low – continuous updates automatically enforced through version control.  
+**Next Milestones:** Integrate SSP and SAP validation workflow into CCM Engine; deploy automatic baseline-tailoring recommendations for each customer environment.
+
