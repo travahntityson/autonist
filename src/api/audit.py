@@ -31,3 +31,4 @@ def write_log(user_id: int, action: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
