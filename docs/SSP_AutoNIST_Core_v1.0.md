@@ -2823,8 +2823,6 @@ End of Appendix C
 - Mermaid diagrams show correctly in GitHub’s diagram viewer.  
 - No mixed indentation or nested fences that break rendering.
 
-Would you like me to apply this same documentation-grade formatting to **Appendices A through F**, so your entire SSP has one consistent GitHub-ready layout?
-
 Appendix D – Data Flow Diagrams and System Boundary Description
 D.1 System Boundary Diagram
 graph TD
