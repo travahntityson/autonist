@@ -26,95 +26,95 @@ const CONTROL_FAMILIES = {
 // Expanded NIST 800-53 Rev. 5 Control Set (40+ controls covering all 20 families + Enhancements)
 const initialControls = [
   // Access Control (AC) - 4 controls + enhancements
-  { id: 'AC-1', family: 'AC', title: 'Access Control Policy and Procedures', status: 'Implemented', required: true, severity: 'Low', procedure: 'The system enforces access control policy via RBAC roles defined in the CMDB.', artifacts: ['AC Policy v2.1'] },
-  { id: 'AC-2', family: 'AC', title: 'Account Management', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Account creation is automated; however, deprovisioning is manual and requires improvement.', artifacts: [] },
-  { id: 'AC-2(1)', family: 'AC', title: 'Automated System Account Management', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Automated processes for managing system accounts are not yet fully operational.', artifacts: [] },
-  { id: 'AC-3', family: 'AC', title: 'Access Enforcement (ZTA)', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Access is enforced using network segmentation and MFA. Not fully Zero Trust yet.', artifacts: ['RBAC Matrix v1.0'] },
-  { id: 'AC-6', family: 'AC', title: 'Least Privilege', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Periodic review of user permissions is planned but not executed.', artifacts: [] },
+  { id: 'AC-1', family: 'AC', title: 'Access Control Policy and Procedures', status: 'Implemented', required: true, severity: 'Low', procedure: 'The system enforces access control policy via RBAC roles defined in the CMDB.', artifacts: ['AC Policy v2.1'], inheritance: 'System Specific' },
+  { id: 'AC-2', family: 'AC', title: 'Account Management', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Account creation is automated; however, deprovisioning is manual and requires improvement.', artifacts: [], inheritance: 'System Specific' },
+  { id: 'AC-2(1)', family: 'AC', title: 'Automated System Account Management', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Automated processes for managing system accounts are not yet fully operational.', artifacts: [], inheritance: 'System Specific' },
+  { id: 'AC-3', family: 'AC', title: 'Access Enforcement (ZTA)', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Access is enforced using network segmentation and MFA. Not fully Zero Trust yet.', artifacts: ['RBAC Matrix v1.0'], inheritance: 'System Specific' },
+  { id: 'AC-6', family: 'AC', title: 'Least Privilege', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Periodic review of user permissions is planned but not executed.', artifacts: [], inheritance: 'System Specific' },
   
   // Awareness and Training (AT) - 2 controls
-  { id: 'AT-1', family: 'AT', title: 'Security & Privacy Policy and Procedures', status: 'Implemented', required: true, severity: 'Low', procedure: 'Security and Privacy policies are reviewed annually and approved by management.', artifacts: ['AT Policy'] },
-  { id: 'AT-2', family: 'AT', title: 'Security Awareness Training', status: 'Not Implemented', required: true, severity: 'Low', procedure: 'Annual security training is required, but tracking completion in the LMS is incomplete.', artifacts: [] },
+  { id: 'AT-1', family: 'AT', title: 'Security & Privacy Policy and Procedures', status: 'Implemented', required: true, severity: 'Low', procedure: 'Security and Privacy policies are reviewed annually and approved by management.', artifacts: ['AT Policy'], inheritance: 'System Specific' },
+  { id: 'AT-2', family: 'AT', title: 'Security Awareness Training', status: 'Not Implemented', required: true, severity: 'Low', procedure: 'Annual security training is required, but tracking completion in the LMS is incomplete.', artifacts: [], inheritance: 'Inherited' },
 
   // Audit and Accountability (AU) - 3 controls
-  { id: 'AU-2', family: 'AU', title: 'Audit Logging', status: 'Implemented', required: true, severity: 'High', procedure: 'All security events are logged, time-stamped, and forwarded to the central SIEM.', artifacts: ['SIEM Config v1.2'] },
-  { id: 'AU-3', family: 'AU', title: 'Content of Audit Records', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'Audit records capture user ID, date, time, and type of event, but lack granular packet data.', artifacts: [] },
-  { id: 'AU-6', family: 'AU', title: 'Audit Review, Analysis, and Reporting', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Automated daily report generation is not yet configured.', artifacts: [] },
+  { id: 'AU-2', family: 'AU', title: 'Audit Logging', status: 'Implemented', required: true, severity: 'High', procedure: 'All security events are logged, time-stamped, and forwarded to the central SIEM.', artifacts: ['SIEM Config v1.2'], inheritance: 'System Specific' },
+  { id: 'AU-3', family: 'AU', title: 'Content of Audit Records', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'Audit records capture user ID, date, time, and type of event, but lack granular packet data.', artifacts: [], inheritance: 'System Specific' },
+  { id: 'AU-6', family: 'AU', title: 'Audit Review, Analysis, and Reporting', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Automated daily report generation is not yet configured.', artifacts: [], inheritance: 'System Specific' },
 
   // Certification, Accreditation, and Security Assessment (CA) - 2 controls
-  { id: 'CA-2', family: 'CA', title: 'Security Assessments', status: 'Not Implemented', required: true, severity: 'High', procedure: 'The initial security assessment by the 3PAO is pending scheduling.', artifacts: [] },
-  { id: 'CA-7', family: 'CA', title: 'Continuous Monitoring (ISCM)', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'The ISCM strategy is defined, but control automation is limited to technical checks.', artifacts: ['ISCM Plan'] },
+  { id: 'CA-2', family: 'CA', title: 'Security Assessments', status: 'Not Implemented', required: true, severity: 'High', procedure: 'The initial security assessment by the 3PAO is pending scheduling.', artifacts: [], inheritance: 'System Specific' },
+  { id: 'CA-7', family: 'CA', title: 'Continuous Monitoring (ISCM)', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'The ISCM strategy is defined, but control automation is limited to technical checks.', artifacts: ['ISCM Plan'], inheritance: 'System Specific' },
   
   // Configuration Management (CM) - 4 controls + enhancement
-  { id: 'CM-2', family: 'CM', title: 'Baseline Configuration', status: 'Implemented', required: true, severity: 'Moderate', procedure: 'A secure baseline configuration is documented and approved for all production servers.', artifacts: ['CM Policy Document'] },
-  { id: 'CM-3', family: 'CM', title: 'Configuration Change Control', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Changes are tracked via Jira tickets, but unauthorized changes can still occur during emergency operations.', artifacts: ['Change Management Process'] },
-  { id: 'CM-3(1)', family: 'CM', title: 'Automated Change Control', status: 'Not Implemented', required: true, severity: 'High', procedure: 'The system lacks automated checks to ensure all production changes correlate to an approved ticket.', artifacts: [] },
-  { id: 'CM-6', family: 'CM', title: 'Configuration Settings', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Continuous monitoring for drift from the baseline is not yet implemented.', artifacts: [] },
-  { id: 'CM-7', family: 'CM', title: 'Least Functionality', status: 'Implemented', required: true, severity: 'Moderate', procedure: 'All non-essential services are disabled via whitelisting.', artifacts: ['App Whitelist Policy'] },
+  { id: 'CM-2', family: 'CM', title: 'Baseline Configuration', status: 'Implemented', required: true, severity: 'Moderate', procedure: 'A secure baseline configuration is documented and approved for all production servers.', artifacts: ['CM Policy Document'], inheritance: 'System Specific' },
+  { id: 'CM-3', family: 'CM', title: 'Configuration Change Control', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Changes are tracked via Jira tickets, but unauthorized changes can still occur during emergency operations.', artifacts: ['Change Management Process'], inheritance: 'System Specific' },
+  { id: 'CM-3(1)', family: 'CM', title: 'Automated Change Control', status: 'Not Implemented', required: true, severity: 'High', procedure: 'The system lacks automated checks to ensure all production changes correlate to an approved ticket.', artifacts: [], inheritance: 'System Specific' },
+  { id: 'CM-6', family: 'CM', title: 'Configuration Settings', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Continuous monitoring for drift from the baseline is not yet implemented.', artifacts: [], inheritance: 'System Specific' },
+  { id: 'CM-7', family: 'CM', title: 'Least Functionality', status: 'Implemented', required: true, severity: 'Moderate', procedure: 'All non-essential services are disabled via whitelisting.', artifacts: ['App Whitelist Policy'], inheritance: 'System Specific' },
 
   // Contingency Planning (CP) - 2 controls
-  { id: 'CP-2', family: 'CP', title: 'Contingency Plan', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'The Disaster Recovery (DR) plan is drafted but requires annual testing.', artifacts: ['DR Plan Draft'] },
-  { id: 'CP-9', family: 'CP', title: 'System Backup', status: 'Implemented', required: true, severity: 'High', procedure: 'Full system backups are performed nightly and stored offsite.', artifacts: ['Backup Logs'] },
+  { id: 'CP-2', family: 'CP', title: 'Contingency Plan', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'The Disaster Recovery (DR) plan is drafted but requires annual testing.', artifacts: ['DR Plan Draft'], inheritance: 'System Specific' },
+  { id: 'CP-9', family: 'CP', title: 'System Backup', status: 'Implemented', required: true, severity: 'High', procedure: 'Full system backups are performed nightly and stored offsite.', artifacts: ['Backup Logs'], inheritance: 'System Specific' },
 
   // Identification and Authentication (IA) - 2 controls
-  { id: 'IA-2', family: 'IA', title: 'Identification and Authentication', status: 'Implemented', required: true, severity: 'High', procedure: 'MFA is enforced for all system access via a FIPS 201-compliant IdP.', artifacts: ['MFA Policy'] },
-  { id: 'IA-5', family: 'IA', title: 'Authenticator Management', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'Credential rotation is automated, but emergency break-glass account procedures are not formally documented.', artifacts: [] },
+  { id: 'IA-2', family: 'IA', title: 'Identification and Authentication', status: 'Implemented', required: true, severity: 'High', procedure: 'MFA is enforced for all system access via a FIPS 201-compliant IdP.', artifacts: ['MFA Policy'], inheritance: 'Inherited' },
+  { id: 'IA-5', family: 'IA', title: 'Authenticator Management', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'Credential rotation is automated, but emergency break-glass account procedures are not formally documented.', artifacts: [], inheritance: 'System Specific' },
 
   // Incident Response (IR) - 2 controls + enhancement
-  { id: 'IR-4', family: 'IR', title: 'Incident Handling', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'The Incident Response Plan (IRP) is approved, but automated containment measures are pending implementation.', artifacts: ['IR Plan v3.0'] },
-  { id: 'IR-4(1)', family: 'IR', title: 'Automated Incident Reporting', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Automated reporting to external federal agencies upon a major incident is not configured.', artifacts: [] },
-  { id: 'IR-5', family: 'IR', title: 'Incident Monitoring and Detection', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Threat feeds are integrated, but custom correlation rules need development.', artifacts: [] },
+  { id: 'IR-4', family: 'IR', title: 'Incident Handling', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'The Incident Response Plan (IRP) is approved, but automated containment measures are pending implementation.', artifacts: ['IR Plan v3.0'], inheritance: 'System Specific' },
+  { id: 'IR-4(1)', family: 'IR', title: 'Automated Incident Reporting', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Automated reporting to external federal agencies upon a major incident is not configured.', artifacts: [], inheritance: 'System Specific' },
+  { id: 'IR-5', family: 'IR', title: 'Incident Monitoring and Detection', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Threat feeds are integrated, but custom correlation rules need development.', artifacts: [], inheritance: 'System Specific' },
 
   // Maintenance (MA) - 2 controls
-  { id: 'MA-2', family: 'MA', title: 'Controlled Maintenance', status: 'Implemented', required: true, severity: 'Moderate', procedure: 'All system maintenance is performed using validated tools and logged via the CM process.', artifacts: ['Maintenance Log Policy'] },
-  { id: 'MA-4', family: 'MA', title: 'Remote Maintenance', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Remote access is limited to VPN, but session logging is inconsistent.', artifacts: [] },
+  { id: 'MA-2', family: 'MA', title: 'Controlled Maintenance', status: 'Implemented', required: true, severity: 'Moderate', procedure: 'All system maintenance is performed using validated tools and logged via the CM process.', artifacts: ['Maintenance Log Policy'], inheritance: 'System Specific' },
+  { id: 'MA-4', family: 'MA', title: 'Remote Maintenance', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Remote access is limited to VPN, but session logging is inconsistent.', artifacts: [], inheritance: 'System Specific' },
 
   // Media Protection (MP) - 2 controls
-  { id: 'MP-2', family: 'MP', title: 'Media Access', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Physical media access is not sufficiently restricted.', artifacts: [] },
-  { id: 'MP-6', family: 'MP', title: 'Media Sanitization', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Formal procedures for cryptographic erase and physical destruction are missing.', artifacts: [] },
+  { id: 'MP-2', family: 'MP', title: 'Media Access', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Physical media access is not sufficiently restricted.', artifacts: [], inheritance: 'System Specific' },
+  { id: 'MP-6', family: 'MP', title: 'Media Sanitization', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Formal procedures for cryptographic erase and physical destruction are missing.', artifacts: [], inheritance: 'System Specific' },
 
   // Physical and Environmental Protection (PE) - 2 controls
-  { id: 'PE-2', family: 'PE', title: 'Physical Access Authorizations', status: 'Implemented', required: true, severity: 'Low', procedure: 'Access is controlled by badges and documented in the access control system.', artifacts: ['Access Badge Policy'] },
-  { id: 'PE-3', family: 'PE', title: 'Physical Access Control', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'All entry points have key card readers, but external storage cages require secondary locking mechanisms.', artifacts: [] },
+  { id: 'PE-2', family: 'PE', title: 'Physical Access Authorizations', status: 'Implemented', required: true, severity: 'Low', procedure: 'Access is controlled by badges and documented in the access control system.', artifacts: ['Access Badge Policy'], inheritance: 'Inherited' },
+  { id: 'PE-3', family: 'PE', title: 'Physical Access Control', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'All entry points have key card readers, but external storage cages require secondary locking mechanisms.', artifacts: [], inheritance: 'Inherited' },
 
   // Program Management (PM) - 2 controls
-  { id: 'PM-1', family: 'PM', title: 'Security and Privacy Program Plan', status: 'Implemented', required: true, severity: 'Low', procedure: 'The overall Security and Privacy program plan is documented and formally approved.', artifacts: ['Program Plan'] },
-  { id: 'PM-14', family: 'PM', title: 'Threat Monitoring', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'We subscribe to threat intelligence feeds, but haven\'t fully integrated them into the SIEM ruleset.', artifacts: [] },
+  { id: 'PM-1', family: 'PM', title: 'Security and Privacy Program Plan', status: 'Implemented', required: true, severity: 'Low', procedure: 'The overall Security and Privacy program plan is documented and formally approved.', artifacts: ['Program Plan'], inheritance: 'System Specific' },
+  { id: 'PM-14', family: 'PM', title: 'Threat Monitoring', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'We subscribe to threat intelligence feeds, but haven\'t fully integrated them into the SIEM ruleset.', artifacts: [], inheritance: 'System Specific' },
 
   // Personnel Security (PS) - 2 controls
-  { id: 'PS-3', family: 'PS', title: 'Personnel Screening', status: 'Implemented', required: true, severity: 'High', procedure: 'All personnel undergo background checks prior to access.', artifacts: ['HR Policy'] },
-  { id: 'PS-4', family: 'PS', title: 'Personnel Termination', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Formal, rapid deprovisioning process upon employee termination is not consistently applied.', artifacts: [] },
+  { id: 'PS-3', family: 'PS', title: 'Personnel Screening', status: 'Implemented', required: true, severity: 'High', procedure: 'All personnel undergo background checks prior to access.', artifacts: ['HR Policy'], inheritance: 'Inherited' },
+  { id: 'PS-4', family: 'PS', title: 'Personnel Termination', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Formal, rapid deprovisioning process upon employee termination is not consistently applied.', artifacts: [], inheritance: 'System Specific' },
 
   // Planning (PL) - 2 controls
-  { id: 'PL-2', family: 'PL', title: 'System Security and Privacy Plan', status: 'Implemented', required: true, severity: 'High', procedure: 'The SSP is maintained and reviewed annually (this application manages it).', artifacts: ['SSP Document'] },
-  { id: 'PL-4', family: 'PL', title: 'Rules of Behavior', status: 'Partially Implemented', required: true, severity: 'Low', procedure: 'Users sign a Rules of Behavior agreement upon onboarding, but it needs an annual refresher.', artifacts: ['RoB Signature Log'] },
+  { id: 'PL-2', family: 'PL', title: 'System Security and Privacy Plan', status: 'Implemented', required: true, severity: 'High', procedure: 'The SSP is maintained and reviewed annually (this application manages it).', artifacts: ['SSP Document'], inheritance: 'System Specific' },
+  { id: 'PL-4', family: 'PL', title: 'Rules of Behavior', status: 'Partially Implemented', required: true, severity: 'Low', procedure: 'Users sign a Rules of Behavior agreement upon onboarding, but it needs an annual refresher.', artifacts: ['RoB Signature Log'], inheritance: 'System Specific' },
 
   // Privacy (PT) - 1 control
-  { id: 'PT-1', family: 'PT', title: 'Privacy Policy and Procedures', status: 'Implemented', required: true, severity: 'Low', procedure: 'A formal privacy policy is maintained and easily accessible to all data subjects.', artifacts: ['Privacy Policy'] },
+  { id: 'PT-1', family: 'PT', title: 'Privacy Policy and Procedures', status: 'Implemented', required: true, severity: 'Low', procedure: 'A formal privacy policy is maintained and easily accessible to all data subjects.', artifacts: ['Privacy Policy'], inheritance: 'System Specific' },
   
   // Risk Assessment (RA) - 2 controls
-  { id: 'RA-3', family: 'RA', title: 'Vulnerability Scanning', status: 'Implemented', required: true, severity: 'Low', procedure: 'Weekly vulnerability scanning is performed and recorded.', artifacts: ['Monthly Scan Log'] },
-  { id: 'RA-5', family: 'RA', title: 'Vulnerability Monitoring', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Threat and vulnerability monitoring tools are deployed, but analyst coverage is intermittent.', artifacts: [] },
+  { id: 'RA-3', family: 'RA', title: 'Vulnerability Scanning', status: 'Implemented', required: true, severity: 'Low', procedure: 'Weekly vulnerability scanning is performed and recorded.', artifacts: ['Monthly Scan Log'], inheritance: 'System Specific' },
+  { id: 'RA-5', family: 'RA', title: 'Vulnerability Monitoring', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Threat and vulnerability monitoring tools are deployed, but analyst coverage is intermittent.', artifacts: [], inheritance: 'System Specific' },
 
   // System and Services Acquisition (SA) - 4 controls
-  { id: 'SA-4', family: 'SA', title: 'Acquisition Process', status: 'Implemented', required: true, severity: 'Low', procedure: 'Procurement policy requires security review before purchasing any new service or component.', artifacts: ['Procurement Policy'] },
-  { id: 'SA-11', family: 'SA', title: 'Developer Testing and Evaluation', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'SAST and DAST scanning is performed manually, but not integrated into the automated CI/CD pipeline.', artifacts: [] },
-  { id: 'SA-12', family: 'SA', title: 'Supply Chain Protection (SCRM)', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Formal SCRM plan and COTS vetting procedures are currently under development.', artifacts: [] },
-  { id: 'SA-15', family: 'SA', title: 'Development Process, Standards, and Tools', status: 'Not Implemented', required: true, severity: 'Low', procedure: 'Development standards are documented, but automated enforcement is lacking.', artifacts: [] },
+  { id: 'SA-4', family: 'SA', title: 'Acquisition Process', status: 'Implemented', required: true, severity: 'Low', procedure: 'Procurement policy requires security review before purchasing any new service or component.', artifacts: ['Procurement Policy'], inheritance: 'System Specific' },
+  { id: 'SA-11', family: 'SA', title: 'Developer Testing and Evaluation', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'SAST and DAST scanning is performed manually, but not integrated into the automated CI/CD pipeline.', artifacts: [], inheritance: 'System Specific' },
+  { id: 'SA-12', family: 'SA', title: 'Supply Chain Protection (SCRM)', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Formal SCRM plan and COTS vetting procedures are currently under development.', artifacts: [], inheritance: 'System Specific' },
+  { id: 'SA-15', family: 'SA', title: 'Development Process, Standards, and Tools', status: 'Not Implemented', required: true, severity: 'Low', procedure: 'Development standards are documented, but automated enforcement is lacking.', artifacts: [], inheritance: 'System Specific' },
 
   // System and Communications Protection (SC) - 2 controls
-  { id: 'SC-7', family: 'SC', title: 'Boundary Protection', status: 'Implemented', required: true, severity: 'High', procedure: 'Firewalls enforce boundary protection rules based on approved security policies.', artifacts: ['Firewall Config'] },
-  { id: 'SC-28', family: 'SC', title: 'Protection of Information at Rest', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'CUI is encrypted at rest using AES-256, but FIPS 140-3 validation is pending for the crypto module.', artifacts: [] },
+  { id: 'SC-7', family: 'SC', title: 'Boundary Protection', status: 'Implemented', required: true, severity: 'High', procedure: 'Firewalls enforce boundary protection rules based on approved security policies.', artifacts: ['Firewall Config'], inheritance: 'Inherited' },
+  { id: 'SC-28', family: 'SC', title: 'Protection of Information at Rest', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'CUI is encrypted at rest using AES-256, but FIPS 140-3 validation is pending for the crypto module.', artifacts: [], inheritance: 'System Specific' },
 
   // System and Information Integrity (SI) - 2 controls
-  { id: 'SI-3', family: 'SI', title: 'Malicious Code Protection', status: 'Implemented', required: true, severity: 'High', procedure: 'Anti-malware software is deployed, updated, and centrally managed on all endpoints.', artifacts: ['AV Logs'] },
-  { id: 'SI-10', family: 'SI', title: 'Software and Firmware Integrity', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Cryptographic hash checks on application binaries are not performed prior to deployment.', artifacts: [] },
+  { id: 'SI-3', family: 'SI', title: 'Malicious Code Protection', status: 'Implemented', required: true, severity: 'High', procedure: 'Anti-malware software is deployed, updated, and centrally managed on all endpoints.', artifacts: ['AV Logs'], inheritance: 'System Specific' },
+  { id: 'SI-10', family: 'SI', title: 'Software and Firmware Integrity', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Cryptographic hash checks on application binaries are not performed prior to deployment.', artifacts: [], inheritance: 'System Specific' },
 
   // Supply Chain Risk Management (SR) - 1 control
-  { id: 'SR-4', family: 'SR', title: 'Supply Chain Protection', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'We utilize vetted suppliers, but formal, periodic auditing of vendor facilities is not performed.', artifacts: [] },
+  { id: 'SR-4', family: 'SR', title: 'Supply Chain Protection', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'We utilize vetted suppliers, but formal, periodic auditing of vendor facilities is not performed.', artifacts: [], inheritance: 'System Specific' },
 
   // Security Assessment and Authorization (CA) - 1 control
-  { id: 'CA-1', family: 'CA', title: 'Security Assessment and Authorization Policy', status: 'Implemented', required: true, severity: 'Low', procedure: 'Policy governing RMF process management is documented in this platform.', artifacts: ['CA Policy'] },
+  { id: 'CA-1', family: 'CA', title: 'Security Assessment and Authorization Policy', status: 'Implemented', required: true, severity: 'Low', procedure: 'Policy governing RMF process management is documented in this platform.', artifacts: ['CA Policy'], inheritance: 'System Specific' },
 ];
 
 // Initial Risk Data (Simulating NIST 800-30/39 requirements)
@@ -148,6 +148,21 @@ const initialAuditLog = [
 ];
 
 const CONTROL_STATUSES = ['Implemented', 'Partially Implemented', 'Not Implemented', 'Not Applicable'];
+
+// --- Cross-Framework Harmonization Data (Simulating OSCAL Maps) ---
+// Note: Removed explicit CMMC refs in UI, now just 'Related Framework'
+const crossWalkMap = {
+    // NIST 800-53 Control: [NIST 800-171 Control, Related Framework Practice]
+    'AC-3': ['3.1.5 (Access Enforce)', 'AC.L2-3.003 (MFA)'],
+    'AC-6': ['3.1.2 (Least Privilege)', 'AC.L2-3.004 (Privileged Access)'],
+    'AT-2': ['3.2.1 (Security Training)', 'AT.L2-3.006 (Role-Based Training)'],
+    'CM-6': ['3.4.5 (Configuration Settings)', 'CM.L2-3.046 (Baseline Enforcement)'],
+    'IR-5': ['3.7.1 (Detect Events)', 'IR.L2-3.093 (Intrusion Detection)'],
+    'SI-10': ['3.13.10 (Software Integrity)', 'SI.L2-3.142 (Integrity Checks)'],
+    'PE-2': ['3.10.1 (Physical Access)', 'PE.L2-3.111 (Access Monitoring)'],
+    'SC-7': ['3.13.1 (Boundary Protection)', 'SC.L2-3.130 (Network Segmentation)'],
+};
+// --- END CROSS-WALK DATA ---
 
 // --- 3. REUSABLE UI COMPONENTS ---
 
@@ -206,7 +221,6 @@ const App = () => {
   const [auditLog, setAuditLog] = useState(initialAuditLog); 
   const [currentRole, setCurrentRole] = useState('ISSM');
   const [activeTab, setActiveTab] = useState('controls'); // Default to controls tab after refactor
-  const [documentContent, setDocumentContent] = useState('');
   const [fileName, setFileName] = useState(''); 
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState('');
@@ -270,8 +284,7 @@ const App = () => {
     if (file) {
       setFileName(file.name);
       // NOTE: In a real app, file content would be loaded here and sent to OCR/NLP API.
-      // For the simulation, we still rely on the user pasting text below.
-      setMessage({ type: 'info', text: `File "${file.name}" uploaded. Processing via simulated OCR. Enter mock text below to analyze.` });
+      setMessage({ type: 'info', text: `File "${file.name}" uploaded. Ready for AI Analysis.` });
     }
   };
 
@@ -295,6 +308,16 @@ const App = () => {
     `;
     const policySentences = mockPolicyContent.split('.').map(s => s.trim()).filter(s => s.length > 1);
     // --- END MOCK POLICY CONTENT ---
+    
+    // --- MOCK CCI CONTINGENCY DATA (Simulating structured scan results) ---
+    // This is the fallback if NLP extraction fails, demonstrating a technical check.
+    const mockCciFindings = [
+        { cci: 'CCI-000200', controlId: 'AC-3', status: 'Pass', artifact: 'NIST STIG Report' },
+        { cci: 'CCI-000343', controlId: 'IR-5', status: 'Fail', artifact: 'ACAS Scan Report' }, 
+        { cci: 'CCI-000180', controlId: 'SI-10', status: 'Pass', artifact: 'SAST Tool Report' }, 
+    ];
+    const cciToControlMap = new Map(mockCciFindings.map(f => [f.controlId, f]));
+    // --- END MOCK CCI CONTINGENCY DATA ---
 
 
     if (!currentRoleConfig.permissions.includes('update_evidence')) {
@@ -315,43 +338,82 @@ const App = () => {
 
       // Map of Control IDs to their required keywords and placeholder procedures
       const controlKeywords = {
-          'AC-3': { keywords: ['zero trust architecture', 'access enforcement'], procedure: null },
-          'AC-6': { keywords: ['least privilege principle', 'periodic review of user permissions'], procedure: null },
-          'CM-6': { keywords: ['configuration baseline enforcement', 'automated tools to check for drift'], procedure: null },
-          'AT-2': { keywords: ['annual security training', 'lms records'], procedure: null },
-          'MP-6': { keywords: ['media is destroyed or wiped', 'nss manual 4009'], procedure: null },
-          'SA-12': { keywords: ['supply chain risk management', 'vetting for all cots components'], procedure: null },
-          'CA-7': { keywords: ['continuous monitoring program', 'iscm strategy'], procedure: null },
+          'AC-3': { keywords: ['zero trust architecture', 'access enforcement'], procedure: null, updatedBy: null },
+          'AC-6': { keywords: ['least privilege principle', 'periodic review of user permissions'], procedure: null, updatedBy: null },
+          'CM-6': { keywords: ['configuration baseline enforcement', 'automated tools to check for drift'], procedure: null, updatedBy: null },
+          'AT-2': { keywords: ['annual security training', 'lms records'], procedure: null, updatedBy: null },
+          'MP-6': { keywords: ['media is destroyed or wiped', 'nss manual 4009'], procedure: null, updatedBy: null },
+          'SA-12': { keywords: ['supply chain risk management', 'vetting for all cots components'], procedure: null, updatedBy: null },
+          'CA-7': { keywords: ['continuous monitoring program', 'iscm strategy'], procedure: null, updatedBy: null },
+          // Controls included for CCI contingency testing
+          'IR-5': { keywords: [], procedure: null, updatedBy: null },
+          'SI-10': { keywords: [], procedure: null, updatedBy: null },
       };
 
-      // 1. Perform Targeted Text Extraction
+      // 1. STAGE 1: Targeted Text Extraction (RAG)
       policySentences.forEach(sentence => {
           const lowerCaseSentence = sentence.toLowerCase();
           
           Object.keys(controlKeywords).forEach(controlId => {
               const controlConfig = controlKeywords[controlId];
-              // Check if any keyword matches AND we haven't already found a narrative for this control
+              // Only attempt NLP if we haven't already extracted a narrative
               if (!controlConfig.procedure && controlConfig.keywords.some(keyword => lowerCaseSentence.includes(keyword))) {
-                  // Capture the exact sentence/phrase as the SSP narrative
                   controlKeywords[controlId].procedure = sentence.trim() + '.';
+                  controlKeywords[controlId].updatedBy = 'NLP/RAG Engine';
               }
           });
       });
 
-      // 2. Update Control Status and Artifacts
+      // 2. STAGE 2: CCI Contingency Check for remaining controls
       Object.keys(controlKeywords).forEach(controlId => {
-          const extractedProcedure = controlKeywords[controlId].procedure;
+          const controlConfig = controlKeywords[controlId];
+          const cciFinding = cciToControlMap.get(controlId);
           
-          if (extractedProcedure) {
+          // Check if RAG failed AND control has a CCI finding
+          if (!controlConfig.updatedBy && cciFinding) {
+              const status = cciFinding.status === 'Pass' ? 'Implemented' : 'Partially Implemented';
+              const procedure = `CCI CONTINGENCY: Status auto-set to ${status} via technical finding ${cciFinding.cci}. Artifact: ${cciFinding.artifact}.`;
+
+              controlKeywords[controlId].procedure = procedure;
+              controlKeywords[controlId].updatedBy = `CCI Check (${cciFinding.cci})`;
+          }
+      });
+
+
+      // 3. Update Control Status and Artifacts
+      Object.keys(controlKeywords).forEach(controlId => {
+          const updateSource = controlKeywords[controlId].updatedBy;
+          
+          if (updateSource) {
               const control = newControls.find(c => c.id === controlId);
-              if (control && control.status !== 'Implemented') {
-                  control.status = 'Implemented';
-                  control.artifacts.push(`${artifactBaseName} - Narrative Extracted`);
+              if (control) {
+                  let status = control.status;
+                  let procedure = controlKeywords[controlId].procedure;
+                  let artifact = `${artifactBaseName} - ${updateSource}`;
+
+                  if (updateSource.startsWith('CCI Check')) {
+                      // Status is determined by CCI result
+                      status = procedure.includes('Implemented') ? 'Implemented' : 'Partially Implemented';
+                      artifact = `${cciToControlMap.get(controlId).artifact}`;
+                  } else {
+                      // Status is determined by successful RAG/Policy Extraction
+                      status = 'Implemented';
+                  }
                   
-                  // Use the extracted sentence as the new procedure
-                  control.procedure = extractedProcedure; 
+                  // Only update if status changed or it was previously empty
+                  if (control.status !== status || !control.procedure.includes('Automated Engine')) {
+                      control.status = status;
+                      control.procedure = procedure;
+                      controlsUpdated++;
+                  }
                   
-                  controlsUpdated++;
+                  // Always overwrite procedure with the latest finding
+                  control.procedure = procedure;
+                  // Only add artifact if it's not already present
+                  if (!control.artifacts.includes(artifact)) {
+                     control.artifacts.push(artifact);
+                  }
+
                   updatedControlIds.push(control.id);
               }
           }
@@ -365,8 +427,8 @@ const App = () => {
           timestamp: new Date().toLocaleString(),
           user: `${currentRole}: Automated Engine`,
           role: currentRole,
-          action: 'NLP/OCR Targeted Extraction',
-          detail: `${controlsUpdated} controls had their narratives extracted: [${updatedControlIds.join(', ')}].`,
+          action: 'NLP/CCI Automated Check',
+          detail: `${controlsUpdated} control status(es) updated: [${updatedControlIds.join(', ')}].`,
         };
         // Prepend the new log entry
         setAuditLog(prevLog => [newLogEntry, ...prevLog]); 
@@ -376,7 +438,7 @@ const App = () => {
       setIsProcessing(false);
       setMessage({ 
           type: 'success', 
-          text: `Targeted NLP Extraction complete on "${artifactBaseName}". ${controlsUpdated} controls had their narratives auto-populated: [${updatedControlIds.join(', ')}].` 
+          text: `Automated Analysis Complete on "${artifactBaseName}". ${updatedControlIds.length} controls were updated via RAG/CCI: [${updatedControlIds.join(', ')}].` 
       });
     }, 2500);
   }, [controls, fileName, currentRole, currentRoleConfig.permissions]);
@@ -687,7 +749,8 @@ const App = () => {
         "CCI",        // Control Correlation Identifier (Mocked)
         "Date Tested",
         "Tested By",
-        "Test Results" // Used for supporting artifacts/evidence
+        "Test Results", // Used for supporting artifacts/evidence
+        "Inheritance Status" // NEW: Added Inheritance Status
       ];
 
       const dateTested = new Date().toLocaleDateString();
@@ -707,7 +770,8 @@ const App = () => {
               cciId, // CCI (Mocked)
               dateTested, // Date Tested (Mocked)
               "Automated Engine / ISSM", // Tested By (Mocked)
-              `Evidence Mapped: ${item.artifacts.join('; ').replace(/"/g, '""')}` // Test Results (Artifacts)
+              `Evidence Mapped: ${item.artifacts.join('; ').replace(/"/g, '""')}`, // Test Results (Artifacts)
+              item.inheritance // Inheritance Status
           ];
       });
 
@@ -764,13 +828,15 @@ const App = () => {
             return;
         }
 
-        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        // Use the first row to determine the header indices
+        const headers = lines[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.trim().replace(/"/g, ''));
         
-        // Determine column indices based on expected eMASS headers
+        // Define expected header fields
         const controlIdIndex = headers.indexOf('Control Acronym');
         const statusIndex = headers.indexOf('Control Implementation Status');
         const narrativeIndex = headers.indexOf('Control Implementation Narrative');
         const artifactIndex = headers.indexOf('Test Results');
+        const inheritanceIndex = headers.indexOf('Inheritance Status'); // NEW: Inheritance Status index
 
         if (controlIdIndex === -1 || statusIndex === -1) {
              setMessage({ type: 'error', text: 'CSV Headers missing. Must contain "Control Acronym" and "Control Implementation Status".' });
@@ -785,11 +851,14 @@ const App = () => {
                            statusRaw.includes('Partial') ? 'Partially Implemented' : 
                            statusRaw.includes('NA') ? 'Not Applicable' : 'Not Implemented';
             
+            const inheritance = (inheritanceIndex !== -1 && values[inheritanceIndex].includes('Inherited')) ? 'Inherited' : 'System Specific';
+
             return {
                 id: values[controlIdIndex],
                 status: status,
                 procedure: (narrativeIndex !== -1 && values[narrativeIndex]) || 'Imported SSP narrative.',
-                artifacts: (artifactIndex !== -1 && values[artifactIndex]) ? values[artifactIndex].split(';').map(a => a.trim()) : [`Imported from ${file.name}`]
+                artifacts: (artifactIndex !== -1 && values[artifactIndex]) ? values[artifactIndex].split(';').map(a => a.trim()) : [`Imported from ${file.name}`],
+                inheritance: inheritance
             };
         }).filter(c => c.id); // Filter out any empty lines/invalid IDs
 
@@ -805,6 +874,7 @@ const App = () => {
                     status: imported.status,
                     procedure: imported.procedure,
                     artifacts: imported.artifacts,
+                    inheritance: imported.inheritance, // Apply inherited status from baseline
                 });
                 updatedCount++;
             }
@@ -1061,7 +1131,11 @@ const App = () => {
                         </div>
                     </div>
                     <div className='flex flex-col items-end space-y-1'>
-                        <StatusPill status={control.status} severity={control.severity} size='xs' />
+                        {control.inheritance === 'Inherited' ? (
+                            <span className='px-2 py-0.5 text-xs font-semibold rounded-full bg-indigo-600/70 text-white'>Inherited</span>
+                        ) : (
+                            <StatusPill status={control.status} severity={control.severity} size='xs' />
+                        )}
                         {control.artifacts.length > 0 && 
                             <span className='text-xs text-green-400/80'>{control.artifacts.length} Artifacts Mapped</span>
                         }
@@ -1106,6 +1180,18 @@ const App = () => {
                                     </button>
                                 ))}
                             </div>
+                        </div>
+                        
+                        {/* Artifacts/Evidence List */}
+                        <div className="pt-3 border-t border-gray-700">
+                             <h6 className="text-xs font-semibold text-gray-400 mb-1">Mapped Evidence/Artifacts:</h6>
+                             <ul className="text-xs text-gray-500 list-disc list-inside space-y-0.5">
+                                 {control.artifacts.length > 0 ? (
+                                     control.artifacts.map((a, i) => <li key={i}>{a}</li>)
+                                 ) : (
+                                     <li>No direct evidence mapped yet.</li>
+                                 )}
+                             </ul>
                         </div>
                     </div>
                 )}
@@ -1239,6 +1325,67 @@ const App = () => {
             </div>
         </div>
     )
+  }
+
+  // --- Compliance Harmonization View Component (Inline for Single File) ---
+  const HarmonizationView = () => {
+    // 1. Map 800-53 controls that have cross-walks
+    const crossWalkControls = controls.filter(c => crossWalkMap[c.id]);
+
+    return (
+        <div>
+            <h2 className="text-2xl font-semibold mb-6 text-white border-l-4 border-yellow-400 pl-3">Compliance Cross-Walk Mapping Engine (OSCAL Harmonization)</h2>
+            <p className="text-gray-400 mb-6">
+                This engine displays how implementation of a single **NIST 800-53** control automatically satisfies requirements in related frameworks like **NIST 800-171** and **ISO/Commercial Practices**.
+            </p>
+            <div className="bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-700">
+                        <thead className="bg-gray-700">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">NIST 800-53 Control</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">800-53 Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">NIST 800-171 Mapping</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Related Framework (e.g., ISO, CMMC)</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Harmonization Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-700">
+                            {crossWalkControls.map((c) => {
+                                const [nist171, related] = crossWalkMap[c.id];
+                                // Status is inherited directly from the 800-53 control
+                                const inheritedStatus = c.status;
+
+                                return (
+                                    <tr key={c.id} className="hover:bg-gray-700 transition-colors duration-150">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-cyan-400">
+                                            {c.id}: {c.title}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                            <StatusPill status={c.status} size="sm" />
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-300 max-w-xs">
+                                            {nist171}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                                            {related}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                            <StatusPill 
+                                                status={inheritedStatus} 
+                                                size="sm" 
+                                                severity={null}
+                                            />
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
   }
 
   // --- AO Authorization View Component (Inline for Single File) ---
@@ -1437,6 +1584,7 @@ const App = () => {
         <TabButton id="poam" label="POA&M Automation" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
         <TabButton id="risk" label="Risk Register" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
         <TabButton id="audit" label="Audit Trail" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
+        <TabButton id="crosswalk" label="Cross-Walk Mapping" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
         {currentRole === 'AO' && <TabButton id="authorization" label="Final Authorization" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />}
       </div>
 
@@ -1517,9 +1665,9 @@ const App = () => {
 
                 {/* AI/NLP Ingestion Panel (Now file upload only) */}
                 <div className='p-6 rounded-xl bg-gray-800 border border-cyan-500/50 shadow-2xl'>
-                    <h3 className='text-xl font-semibold mb-3 text-cyan-400'>Automated Documentation Analysis (AI/NLP Engine)</h3>
+                    <h3 className='text-xl font-semibold mb-3 text-cyan-400'>Automated Documentation Analysis (AI/NLP / CCI Engine)</h3>
                     <p className='text-sm text-gray-400 mb-4'>
-                        **OCR Prerequisite:** Upload a PDF/Image policy file below. The system simulates **OCR/NLP** to extract and analyze policy text for **automated control population**.
+                        **OCR Prerequisite:** Upload a PDF/Image policy file below. The system simulates **Targeted NLP Extraction (RAG)**, with **CCI mapping** as a contingency fallback for technical controls.
                     </p>
                     
                     {/* Simulated File Upload Input */}
@@ -1540,7 +1688,7 @@ const App = () => {
                             disabled={isProcessing || !currentRoleConfig.permissions.includes('update_evidence') || !fileName}
                             className="cyber-button w-full px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold disabled:bg-gray-600 disabled:shadow-none"
                         >
-                            {isProcessing ? 'Analyzing Evidence...' : '2. Run AI Analysis (Simulate OCR/NLP)'}
+                            {isProcessing ? 'Analyzing Evidence...' : '2. Run AI Analysis (RAG/CCI Check)'}
                         </button>
                         
                         <p className='text-xs text-gray-500'>*AI analysis uses a mock policy text based on the uploaded file name.</p>
@@ -1628,6 +1776,9 @@ const App = () => {
         {/* --- AUDIT TRAIL VIEW --- */}
         {activeTab === 'audit' && <AuditTrailView />}
         
+        {/* --- COMPLIANCE CROSS-WALK VIEW --- */}
+        {activeTab === 'crosswalk' && <HarmonizationView />}
+
         {/* --- FINAL AUTHORIZATION VIEW (AO only) --- */}
         {activeTab === 'authorization' && <AuthorizationView />}
       </div>
