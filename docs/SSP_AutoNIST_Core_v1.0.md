@@ -2823,7 +2823,7 @@ End of Appendix C
 - Mermaid diagrams show correctly in GitHub’s diagram viewer.  
 - No mixed indentation or nested fences that break rendering.
 
-Appendix D – Data Flow Diagrams and System Boundary Description
+## Appendix D – Data Flow Diagrams and System Boundary Description
 D.1 System Boundary Diagram
 graph TD
     subgraph External["External Users"]
@@ -2878,7 +2878,7 @@ Zone	Description	Key Controls
 4	External Interfaces	CA-3, SC-8
 5	Infrastructure / Host	PE-3, CM-6
 
-Appendix E – RMF Control Implementation Responsibility Matrix
+## Appendix E – RMF Control Implementation Responsibility Matrix
 
 Control Family	AO	ISSO	ISSM	CISO	SysO	DevSecOps	Assessor	Risk Officer	Privacy	FSO
 AC – Access Control	A	R	C	I	C	R	C	I	I	–
@@ -2897,7 +2897,7 @@ SI – Integrity	I	R	C	I	A	R	C	I	–	–
 Legend:
 R – Responsible A – Accountable C – Consulted I – Informed
 
-Appendix F – Change Management & Version Control Policy
+## Appendix F – Change Management & Version Control Policy
 
 F.1 Objectives
 
