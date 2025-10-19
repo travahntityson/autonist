@@ -11,6 +11,9 @@ services:
     volumes:
       - ./data:/app/data
     restart: always
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
 
   db:
     image: postgres:16-alpine
