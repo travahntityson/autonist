@@ -2916,6 +2916,7 @@ flowchart LR
     F --> G[Security Scan]
     G --> H[Production Deploy]
     H --> I[Tag Release + Audit Log]
+    
 F.3 Standards
 Rule	Description
 Branch Names	feature/*, bugfix/*, hotfix/*, release/*
@@ -2925,6 +2926,7 @@ Reviews	At least 1 approving reviewer
 Tagging	Semantic Versioning vX.Y.Z
 Retention	Keep merged branches 90 days
 Rollback	Automated via CI/CD pipeline
+
 F.4 Roles (CM-2 through CM-6)
 CM Control	Responsible	Supporting
 CM-2 Baseline Config	DevSecOps	ISSO
@@ -2932,6 +2934,7 @@ CM-3 Change Control	ISSM	AO
 CM-4 Impact Analysis	Risk Officer	Assessor
 CM-5 Access Restriction	ISSO	AO
 CM-6 Config Settings	DevSecOps	SysO
+
 F.5 Approval Thresholds
 Category	Risk	Approval	Window
 Emergency	Critical	AO + ISSM	4 hrs
@@ -2998,6 +3001,7 @@ CAT 4 – Policy Violation	Unauthorized software install	Low	ISSO / HR	24 h
 CAT 5 – Data Spillage / Leak	CUI transmitted to unauthorized system	Critical	Privacy Officer / AO	2 h
 CAT 6 – Probe / Scan	Reconnaissance attempt detected	Low	Security Analyst	48 h
 CAT 7 – Configuration Error	Misconfigured ACL / policy drift	Medium	DevSecOps	12 h
+
 G.4 Automated Response Playbooks (Examples)
 Playbook Name	Trigger	Automated Action	Manual Approval Required
 User-Account Lockout	Multiple failed logins	Disable account + alert ISSO	No
@@ -3005,6 +3009,7 @@ Host Isolation	Endpoint IOC detected	Remove from network via EDR API	Yes
 Malware Containment	File hash matches known signature	Quarantine file + trigger scan	No
 Data Spillage Workflow	Unauthorized data movement	Stop transfer + alert Privacy Officer	Yes
 Service Restart / Rollback	Container compromise alert	Deploy clean image from baseline	No
+
 G.5 Incident Response Roles and Responsibilities
 Role	Responsibilities	Evidence Generated
 ISSO / IR Lead	Coordinate IR activities and reports to AO	incident_summary_report.pdf
@@ -3013,12 +3018,14 @@ Security Analyst	Validate alerts and triage severity	incident_ticket.json
 Risk Officer	Update POA&M and risk register	poam_update_log.json
 Privacy Officer	Lead response for PII events	privacy_incident_form.pdf
 AO / CISO	Approve closure and residual risk acceptance	authorization_update.pdf
+
 G.6 Communication and Notification Plan
 Notification	Audience	Channel	Trigger / Threshold	SLA
 Immediate Critical Alert	AO / CISO / ISSM	Encrypted email + dashboard	CAT 1 / 5 incident	≤ 1 h
 High Severity Incident	ISSO / Risk Officer	Ticket + ChatOps message	CAT 2 / 3 event	≤ 2 h
 Daily Status Report	IR Team	Automated digest	All open incidents	24 h
 Monthly Metrics	AO / CISO	CCM Dashboard	IR KPIs and closure rates	Monthly
+
 G.7 Metrics and Continuous Improvement
 Metric	Target	Measurement Source
 Mean Time to Detect (MTTD)	≤ 5 min	SIEM / SOAR logs
@@ -3026,6 +3033,7 @@ Mean Time to Respond (MTTR)	≤ 4 h (high) / 24 h (low)	SOAR tickets
 Percentage of Automated Responses	≥ 60 %	SOAR playbook analytics
 Recurrence Rate (Post-Remediation)	≤ 2 %	IR Database
 Lessons Learned Closed in POA&M	100 % within 30 days	Risk Dashboard
+
 G.8 Post-Incident Analysis and Lessons Learned Workflow
 flowchart TD
     A["Incident Closed"] --> B["Root Cause Analysis (RCA)"]
@@ -3099,6 +3107,7 @@ Tier 2	Data corruption	Restore from snapshot / replica	Database Admin
 Tier 3	Regional outage	Failover to alternate region	ISSO / SysO
 Tier 4	Total loss of primary site	Activate Disaster Recovery site + offline restore	AO / CISO
 Tier 5	Cyberattack compromising infrastructure	Isolate, forensic analysis, rebuild from clean baseline	ISSO / IR Team
+
 H.5 Failover and Restoration Workflow
 sequenceDiagram
     participant P as Primary System
@@ -3112,18 +3121,21 @@ sequenceDiagram
     S->>B: Verify Data Integrity
     B->>S: Restore Missing Segments
     S->>U: System Online / Recovered
+    
 H.6 Testing and Validation Schedule
 Test Type	Frequency	Responsible Role	Artifacts Produced
 Tabletop Exercise	Quarterly	ISSO / AO / CISO	tabletop_report.pdf
 Functional Failover Test	Semi-Annual	DevSecOps / SysO	failover_test_log.txt
 Full Disaster Simulation	Annual	ISSM / AO	disaster_recovery_report.pdf
 Backup Integrity Verification	Monthly	Database Admin	backup_validation_log.json
+
 H.7 Communication Plan (During Disruption)
 Phase	Audience	Method	Frequency
 Incident Notification	AO / CISO / ISSM	Encrypted email + ChatOps	Immediate
 Status Updates	All personnel	Secure portal / intranet	Every 2 h
 Public Comms (if required)	Stakeholders / Clients	AO approved press release	As needed
 After-Action Briefing	All stakeholders	Video conference	Post restoration
+
 H.8 Contingency Plan Maintenance
 
 Contingency Plan reviewed and updated every 12 months or after any major change.
@@ -3214,17 +3226,20 @@ sequenceDiagram
     ISSO->>CI: Approve security review
     CI->>Prod: Release patch to production
     Prod->>Repo: Tag version + log evidence
+    
 I.5 Vulnerability Severity and Response Timelines
 Severity Level	CVSS Range	Example Issue	Response Time	Mitigation Deadline
 Critical	9.0–10.0	Remote code execution	Immediate notification	≤ 24 h
 High	7.0–8.9	Privilege escalation	Notify ISSO	≤ 72 h
 Medium	4.0–6.9	Info disclosure or weak cipher	Track in POA&M	≤ 7 days
 Low	0.1–3.9	Cosmetic or informational	Monitor	≤ 30 days
+
 I.6 Automated Patch Distribution
 Environment	Method	Validation
 On-Prem (Air-Gapped)	Signed update packages manually loaded	Offline signature verification
 Cloud (GovCloud / GCCH)	CI/CD pipeline auto-deploys patches	Automated compliance check
 Hybrid	Federation via secure API to local enclave	Token-based mutual TLS authentication
+
 I.7 System Integrity Baseline Controls
 Control	Implementation	Evidence
 SI-2 – Flaw Remediation	Vulnerability scanner integration with CI/CD	scan_results.json, remediation_log.txt
@@ -3232,6 +3247,7 @@ SI-3 – Malicious Code Protection	Endpoint and container scanning	malware_scan_
 SI-4 – System Monitoring	SIEM correlation and behavioral analytics	siem_alert_log.json
 SI-7 – Software, Firmware, Information Integrity	Cryptographic hashing and baseline verification	integrity_verification_report.json
 RA-5 – Vulnerability Scanning	Continuous scanning and risk analysis	vuln_summary.csv
+
 I.8 Metrics and Reporting
 Metric	Target	Data Source
 Patch Compliance	≥ 95%	CI/CD logs
@@ -3239,6 +3255,7 @@ Time to Remediate (Critical)	≤ 24 h	Risk Dashboard
 Integrity Drift Detected	≤ 1% hosts/month	Integrity Monitor
 False Positive Rate	≤ 2%	SOAR reports
 Vulnerability Recurrence	≤ 5% / quarter	Nessus delta scans
+
 I.9 Continuous Improvement and Lessons Learned
 
 All post-remediation activities are logged and reviewed monthly.
@@ -3387,6 +3404,7 @@ All controls ≥ 90 % compliant and no Critical risks	Active	Maintain ATO	Standa
 High risk > 10 % of controls or Compliance < 90 %	Conditional	AO approves temporary ATO with conditions	Increased frequency of monitoring
 Critical risk detected or ATO scope breach	Suspended	AO requires remediation plan	Automatic notification to stakeholders
 Persistent non-compliance or major breach	Revoked	AO terminates ATO	System access restricted
+
 J.6 Risk Dashboard Metrics
 Metric	Target	Source	Frequency
 Overall Compliance Score	≥ 95 %	CCM Engine / OSCAL SSP	Continuous
@@ -3394,6 +3412,7 @@ Critical Risk Count	0	Risk DB	Hourly
 POA&M Closure Rate	≥ 90 % / 30 days	POA&M Manager	Daily
 Average Risk Score	≤ 5	Risk Service	Continuous
 Authorization Status	Active / Conditional / Suspended	AO Portal	Real time
+
 J.7 Control Mapping for Continuous Authorization
 NIST Control	Description	AutoNIST Implementation
 CA-7	Continuous Monitoring	Real-time evidence collection + risk dashboard
@@ -3403,12 +3422,14 @@ RA-3	Risk Assessment	Automated risk scoring via OSCAL artifact
 RA-5	Vulnerability Scanning	Weekly scan integration
 PL-2	System Security Plan	Dynamic SSP updates from risk engine
 PL-8	Information Security Architecture	Dashboards mapped to boundary components
+
 J.8 cATO Governance and Review Cadence
 Activity	Frequency	Responsible	Evidence Artifact
 Risk Score Re-evaluation	Continuous	Risk Officer / ISSO	risk_assessment_log.json
 ATO Status Validation	Quarterly	AO / ISSM	authorization_review_report.pdf
 System Boundary Audit	Annual	Security Architect	boundary_audit_record.md
 Dashboard Calibration	Quarterly	DevSecOps	dashboard_metrics.csv
+
 J.9 Key Benefits
 
 Data-Driven Risk Decisions: AO bases authorization on quantitative metrics instead of subjective judgment.
@@ -3490,24 +3511,28 @@ AR-8	Accounting of Disclosures	Log each external data share	disclosure_log.json
 PT-2	Privacy Impact Analysis of Technology	Reviews before new feature deploy	tech_privacy_assessment.md
 PT-4	Consent Mechanisms	User consent recorded / revocable	consent_registry.json
 PT-5	Data Retention & Disposal	Automated retention policy	retention_schedule.yaml
+
 K.5 Data-Retention and Minimization Policy
 Data Type	Retention Period	Disposal Method	Responsible Role
 User Account Data	3 years after deactivation	Cryptographic wipe + delete key	DevSecOps
 Audit Logs (PII Redacted)	1 year min (then archive)	Secure archive with checksum	ISSO
 Support Tickets (CUI)	5 years	Encrypted deletion batch	SysO
 Training Records	6 years per OMB A-130	Controlled archive	Privacy Officer
+
 K.6 Privacy Risk Matrix (Quantitative Example)
 Risk ID	Description	Likelihood	Impact	Risk Score	Mitigation
 PR-001	Accidental disclosure of user email in logs	2	3	6 (Medium)	Mask email fields; log review
 PR-002	Unauthorized access to PII store	3	5	15 (High)	MFA, encryption, continuous monitoring
 PR-003	Retention policy not enforced	2	4	8 (Moderate)	Automate expiry jobs; monthly validation
 PR-004	Inadequate privacy training	3	2	6 (Medium)	Annual training + tracking dashboard
+
 K.7 User Rights and Transparency
 Right	Description	Implementation
 Access and Review	Users may request copies of their PII	Handled via privacy_request_portal
 Correction	Users can request corrections to PII	Verified by Privacy Officer
 Consent Withdrawal	Users can opt out of non-essential processing	Immediate revocation via API
 Disclosure Accounting	All external data shares logged	Auditable trail maintained in disclosure_log.json
+
 K.8 Integration with Incident Response and Risk Frameworks
 
 PII incidents feed directly into the SOAR workflow (Appendix G).
@@ -3522,6 +3547,7 @@ PIA Completion Rate	100 % of systems	PIA repository	Annual
 Privacy Training Completion	≥ 95 % of staff	LMS report	Quarterly
 Data Retention Compliance	≥ 98 %	Retention scheduler logs	Monthly
 Disclosure Audit Accuracy	100 %	Disclosure log reviews	Semi-annual
+
 K.10 Alignment Summary
 NIST Control	Description	AutoNIST Core Implementation
 AR-2	Privacy Impact Assessment	Automated PIA generation and repository
@@ -3598,12 +3624,14 @@ R-002	SI-2	Critical CVE pending patch	20	Critical	Patch scheduled via CI/CD	Mode
 R-003	AC-17	MFA enforcement delay for new VPN users	9	Moderate	Temporary compensating control	Low
 R-004	AU-12	Missing centralized log feed from one subnet	6	Moderate	Syslog connector deployment	Low
 R-005	RA-5	Occasional false positives in vulnerability scans	4	Low	Algorithm tuned	Low
+
 L.5 Residual Risk Scoring Model
 Risk Level	Description	Example Action	AO Disposition
 Critical	Unacceptable exposure; active exploitation possible	Emergency mitigation / system isolation	ATO hold
 High	Significant impact; compensating control may be temporary	Prioritize remediation within 30 days	AO approval required
 Moderate	Manageable risk; continuous monitoring sufficient	Track via POA&M	AO awareness
 Low	Minimal exposure; inherent control sufficient	Accept	AO notification only
+
 L.6 POA&M Summary Snapshot
 Category	Open	Closed	% Closed	Trend
 Technical Vulnerabilities	7	41	85.4	⬆ Improving
@@ -3611,6 +3639,7 @@ Policy / Documentation Gaps	2	9	81.8	➡ Stable
 Training / Awareness	1	10	90.9	⬆ Improving
 Third-Party Dependencies	3	7	70.0	⬆ Improving
 Total	13	67	83.7 %	⬆ Upward Trend
+
 L.7 Continuous Improvement and Lessons Learned
 
 Integrate risk-scoring feedback loops from Appendix J to prioritize controls dynamically.
@@ -3629,6 +3658,7 @@ Technical Controls	Excellent	Minor issues found in legacy API endpoint
 Operational Controls	Strong	User training and incident response mature
 Management Controls	Excellent	Governance and risk posture documented and auditable
 Overall Risk Posture	Low	Meets FedRAMP High continuous monitoring requirements
+
 L.9 Alignment with NIST and FedRAMP Assessment Controls
 Reference	Description	Implementation Status
 CA-2	Security Assessments	Implemented and automated
