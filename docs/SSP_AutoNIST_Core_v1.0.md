@@ -3317,6 +3317,7 @@ Score Range	Risk Level	Required Action
 6–10	Moderate	Mitigate within 30 days
 11–15	High	AO review / POA&M entry
 16–25	Critical	Immediate remediation / potential ATO suspension
+
 J.3 OSCAL JSON Risk Artifact Example
 {
   "system-risk-profile": {
