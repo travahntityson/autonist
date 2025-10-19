@@ -3361,6 +3361,7 @@ J.3 OSCAL JSON Risk Artifact Example
     }
   }
 }
+
 J.4 Continuous Authorization Workflow
 sequenceDiagram
     participant CM as "Continuous Monitor"
