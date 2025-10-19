@@ -2714,6 +2714,11 @@ This appendix describes its data-flow architecture, pipelines, metrics, and esca
 
 ### 1. Continuous Monitoring Architecture
 
+### Figure C.1 – Continuous Monitoring Architecture
+
+This flowchart illustrates how AutoNIST Core ingests, normalizes, and maps continuous-monitoring data across its evidence and compliance subsystems.
+
+```mermaid
 flowchart TD
     A["Data Sources"] --> B["Evidence Collector"]
     B --> C["Evidence Normalizer"]
@@ -2723,6 +2728,7 @@ flowchart TD
     F --> G["Dashboard and Alerts"]
     G --> H["POA&M Generator"]
     G --> I["Authorization Dashboard (AO Portal)"]
+
 
 Component Summary
 
@@ -2824,7 +2830,9 @@ End of Appendix C
 - No mixed indentation or nested fences that break rendering.
 
 ## Appendix D – Data Flow Diagrams and System Boundary Description
+
 D.1 System Boundary Diagram
+```mermaid
 graph TD
     subgraph External["External Users"]
         U1[ISSO UI]:::user
@@ -2862,6 +2870,7 @@ graph TD
     A2-->I2
     A2-->I3
     A2-->I4
+
 System Boundary Summary
 
 Application Tier (API Gateway, CCM Engine) + Data Tier (DB, Logs, Evidence) form the accredited boundary.
@@ -2910,6 +2919,7 @@ Provide rollback capability
 Maintain traceability between commits, approvals, and POA&M entries
 
 F.2 Workflow
+```mermaid
 flowchart LR
     A[Developer Branch] --> B[Pull Request]
     B --> C[Automated Tests]
@@ -2955,6 +2965,7 @@ It fulfills **NIST SP 800-53 Rev. 5 IR-1 through IR-10** and supports **RMF Step
 
 ### G.1 Incident Response Lifecycle (Overview)
 
+```mermaid
 flowchart LR
     A["Detect Event"] --> B["Analyze and Classify"]
     B --> C["Containment"]
@@ -3112,6 +3123,8 @@ Tier 4	Total loss of primary site	Activate Disaster Recovery site + offline rest
 Tier 5	Cyberattack compromising infrastructure	Isolate, forensic analysis, rebuild from clean baseline	ISSO / IR Team
 
 H.5 Failover and Restoration Workflow
+
+```mermaid
 sequenceDiagram
     participant P as Primary System
     participant S as Secondary System
@@ -3185,6 +3198,7 @@ It supports continuous risk reduction through proactive scanning, alerting, and 
 
 ### I.2 Integrity Monitoring Architecture
 
+```mermaid
 flowchart TD
     A["Host and Container Agents"] --> B["Integrity Monitor"]
     B --> C["Hash Baseline Database"]
@@ -3291,6 +3305,7 @@ This framework enables dynamic, data-driven authorization decisions rather than 
 
 ### J.1 Architecture Overview
 
+```mermaid
 flowchart TD
     A["CCM Engine – Evidence Collectors"] --> B["Risk Scoring Service"]
     B --> C["Risk Database (JSON / OSCAL Artifacts)"]
@@ -3385,6 +3400,8 @@ J.3 OSCAL JSON Risk Artifact Example
 }
 
 J.4 Continuous Authorization Workflow
+
+```mermaid
 sequenceDiagram
     participant CM as "Continuous Monitor"
     participant RS as "Risk Scoring Service"
@@ -3457,6 +3474,7 @@ The objective is to ensure the confidentiality, integrity, and purpose-limitatio
 
 ### K.1 Privacy Governance Structure
 
+```mermaid
 graph TD
     A["Privacy Officer (PO)"] --> B["Data Protection Program"]
     B --> C["Privacy Risk Assessments"]
@@ -3484,6 +3502,8 @@ Phase	Description	Output Artifact
 All PIAs are reviewed annually or when system changes significantly alter PII processing.
 
 K.3 PII Data Flow
+
+```mermaid
 flowchart LR
     U[User / Personnel Input] --> A[Application API Gateway]
     A --> B[Encrypted Database (PII Store)]
@@ -3604,6 +3624,7 @@ All findings are logged in the POA&M with unique IDs and timestamps for traceabi
 
 ### L.3 Risk Category Distribution
 
+```mermaid
 pie showData
     "Critical (≥16)" : 3
     "High (11–15)" : 5
