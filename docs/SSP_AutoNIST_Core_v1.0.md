@@ -3198,6 +3198,7 @@ Analysis	Assess risk using CVSS v3.1 scoring	AutoNIST Risk Engine	Continuous
 Remediation	Apply patch or mitigation via CI/CD pipeline	GitHub Actions / Ansible / Terraform	As needed
 Validation	Confirm resolution and rescan	Nessus API	Within 48 h
 Reporting	Update POA&M and dashboards	CCM Engine	Continuous
+
 I.4 Patch and Update Lifecycle
 sequenceDiagram
     participant Dev as DevSecOps
