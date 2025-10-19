@@ -1,0 +1,9 @@
+autonist-core/
+├── src/
+│   ├── main.py
+│   ├── api/audit.py
+│   ├── db/models.py
+│   └── services/crypto.py
+├── requirements.txt
+├── Dockerfile
+└── README.md
