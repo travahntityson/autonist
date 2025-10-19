@@ -1,0 +1,6 @@
+{
+  "control_id": "CM-6",
+  "source": "server01",
+  "value": {"baseline_match": false},
+  "timestamp": "2025-10-19T00:00:00Z"
+}
