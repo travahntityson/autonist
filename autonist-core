@@ -1,0 +1,33 @@
+autonist-core/
+│
+├── src/
+│   ├── api/
+│   │   ├── auth.py          # Login, token issue (CAC/PIV-ready)
+│   │   ├── controls.py      # CRUD for control objects
+│   │   ├── evidence.py      # Placeholder for file/evidence endpoints
+│   │   └── audit.py         # Write/verify immutable logs
+│   │
+│   ├── db/
+│   │   ├── models.py        # SQLAlchemy models (Users, Controls, Logs)
+│   │   └── database.py      # Engine + session mgmt
+│   │
+│   ├── services/
+│   │   ├── crypto.py        # FIPS-mode crypto wrapper
+│   │   └── rbac.py          # Role-based access logic
+│   │
+│   ├── utils/
+│   │   └── oscalschema.py   # OSCAL JSON schema utilities
+│   │
+│   └── main.py              # FastAPI app entry point
+│
+├── config/
+│   ├── settings.yaml        # DB creds, crypto module path
+│   └── fips_module_stub.txt # Placeholder for CMVP reference
+│
+├── tests/
+│   └── test_controls.py
+│
+├── Dockerfile
+├── requirements.txt
+├── .gitignore
+└── README.md
