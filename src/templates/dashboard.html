@@ -1,0 +1,52 @@
+<!-- src/templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AutoNIST Dashboard</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; background: #f7f9fc; }
+    h1 { color: #222; }
+    .metrics { display: flex; gap: 2rem; margin-bottom: 1rem; }
+    .card { background: white; padding: 1rem 2rem; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    th, td { padding: .75rem 1rem; border-bottom: 1px solid #eee; text-align: left; }
+    th { background: #fafafa; }
+  </style>
+</head>
+<body>
+  <h1>🛡️ AutoNIST Core Dashboard</h1>
+
+  <div class="metrics">
+    <div class="card">
+      <h3>Compliance Rate</h3>
+      <p style="font-size:1.5em;">{{ summary.compliance_rate }}</p>
+    </div>
+    <div class="card">
+      <h3>Total Controls</h3>
+      <p style="font-size:1.5em;">{{ summary.total_controls }}</p>
+    </div>
+  </div>
+
+  <h2>Risk Summary</h2>
+  <table>
+    <tr><th>Risk Level</th><th>Count</th></tr>
+    {% for k,v in summary.risk_summary.items() %}
+    <tr><td>{{ k }}</td><td>{{ v }}</td></tr>
+    {% endfor %}
+  </table>
+
+  <h2 style="margin-top:2rem;">Open POA&M Entries</h2>
+  <table>
+    <tr><th>Control ID</th><th>Finding</th><th>Risk Level</th><th>Status</th></tr>
+    {% for entry in poam %}
+    <tr>
+      <td>{{ entry.control_id }}</td>
+      <td>{{ entry.finding }}</td>
+      <td>{{ entry.risk_level }}</td>
+      <td>{{ entry.status }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
