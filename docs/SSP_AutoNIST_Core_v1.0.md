@@ -2949,13 +2949,13 @@ It fulfills **NIST SP 800-53 Rev. 5 IR-1 through IR-10** and supports **RMF Step
 
 ### G.1 Incident Response Lifecycle (Overview)
 
-```mermaid
 flowchart LR
-    A[Detect Event] --> B[Analyze & Classify]
-    B --> C[Containment]
-    C --> D[Eradication & Recovery]
-    D --> E[Post-Incident Review]
-    E --> F[Lessons Learned / POA&M Update]
+    A["Detect Event"] --> B["Analyze and Classify"]
+    B --> C["Containment"]
+    C --> D["Eradication and Recovery"]
+    D --> E["Post-Incident Review"]
+    E --> F["Lessons Learned and POA&M Update"]
+
 Lifecycle Phases
 
 Detection – Event identified via SIEM or anomaly detection.
