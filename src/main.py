@@ -1,24 +1,30 @@
 # src/main.py
-# AutoNIST Core Backend
-# This is the main entry point for the FastAPI service.
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+from src.api import audit, evidence, reporting
+from src.services.poam_generator import list_poam_entries
 
-from fastapi import FastAPI
-from datetime import datetime
+app = FastAPI(title="AutoNIST Core API", version="1.0.0")
+templates = Jinja2Templates(directory="src/templates")
 
-# Initialize the FastAPI application
-app = FastAPI(
-    title="AutoNIST Core API",
-    version="0.1.0",
-    description="Baseline RMF automation backend for FedRAMP/NIST 800-171 compliance."
-)
+# Include existing API routers
+app.include_router(audit.router)
+app.include_router(evidence.router)
+app.include_router(reporting.router)
 
-@app.get("/")
-def read_root():
-    """
-    Basic health check endpoint.
-    Returns current UTC time to confirm the API is active.
-    """
-    return {
-        "status": "AutoNIST Core API running",
-        "time": datetime.utcnow().isoformat() + "Z"
+@app.get("/", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    """Render compliance summary dashboard."""
+    # For demo purposes, call the reporting summary endpoint directly
+    dummy_evidence = []   # could later be replaced with real DB pull
+    summary_data = {
+        "total_controls": 10,
+        "compliance_rate": "80%",
+        "risk_summary": {"High": 1, "Moderate": 2, "Low": 7, "N/A": 0}
     }
+    poam = list_poam_entries()
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {"request": request, "summary": summary_data, "poam": poam}
+    )
