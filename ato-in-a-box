@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 // Defining the roles for RBAC simulation
 const ROLES = {
   AO: { name: 'Authorization Official', color: 'bg-red-500/20 text-red-600 border-red-500', permissions: ['view_all', 'authorize'] },
-  ISSM: { name: 'ISSM / Auditor', color: 'bg-blue-500/20 text-blue-600 border-blue-500', permissions: ['view_all', 'edit_controls', 'approve_poam'] },
+  ISSM: { name: 'ISSM / Auditor', color: 'bg-blue-500/20 text-blue-600 border-blue-500', permissions: ['view_all', 'edit_controls', 'approve_poam', 'update_evidence'] },
   SO: { name: 'System Owner', color: 'bg-green-500/20 text-green-600 border-green-500', permissions: ['view_controls', 'update_evidence'] },
 };
 
@@ -20,37 +20,54 @@ const CONTROL_FAMILIES = {
     'PS': 'Personnel Security', 'RA': 'Risk Assessment', 'SC': 'System and Communications Protection', 
     'SI': 'System and Information Integrity', 'SA': 'System and Services Acquisition', 'SR': 'Supply Chain Risk Management',
     'PL': 'Planning', 'PT': 'Privacy'
-    // Note: DA, SE, and other privacy families are sometimes grouped differently in implementation,
-    // but this list covers the standard 20 security/privacy high-level domains.
 };
 
 
-// Expanded NIST 800-53 Rev. 5 Control Set (25 controls across 9 families to simulate the full scope)
+// Expanded NIST 800-53 Rev. 5 Control Set (40+ controls covering all 20 families + Enhancements)
 const initialControls = [
-  // Access Control (AC) - 4 controls
+  // Access Control (AC) - 4 controls + enhancements
   { id: 'AC-1', family: 'AC', title: 'Access Control Policy and Procedures', status: 'Implemented', required: true, severity: 'Low', procedure: 'The system enforces access control policy via RBAC roles defined in the CMDB.', artifacts: ['AC Policy v2.1'] },
   { id: 'AC-2', family: 'AC', title: 'Account Management', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Account creation is automated; however, deprovisioning is manual and requires improvement.', artifacts: [] },
+  { id: 'AC-2(1)', family: 'AC', title: 'Automated System Account Management', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Automated processes for managing system accounts are not yet fully operational.', artifacts: [] },
   { id: 'AC-3', family: 'AC', title: 'Access Enforcement (ZTA)', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Access is enforced using network segmentation and MFA. Not fully Zero Trust yet.', artifacts: ['RBAC Matrix v1.0'] },
   { id: 'AC-6', family: 'AC', title: 'Least Privilege', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Periodic review of user permissions is planned but not executed.', artifacts: [] },
+  
+  // Awareness and Training (AT) - 2 controls
+  { id: 'AT-1', family: 'AT', title: 'Security & Privacy Policy and Procedures', status: 'Implemented', required: true, severity: 'Low', procedure: 'Security and Privacy policies are reviewed annually and approved by management.', artifacts: ['AT Policy'] },
+  { id: 'AT-2', family: 'AT', title: 'Security Awareness Training', status: 'Not Implemented', required: true, severity: 'Low', procedure: 'Annual security training is required, but tracking completion in the LMS is incomplete.', artifacts: [] },
 
   // Audit and Accountability (AU) - 3 controls
   { id: 'AU-2', family: 'AU', title: 'Audit Logging', status: 'Implemented', required: true, severity: 'High', procedure: 'All security events are logged, time-stamped, and forwarded to the central SIEM.', artifacts: ['SIEM Config v1.2'] },
   { id: 'AU-3', family: 'AU', title: 'Content of Audit Records', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'Audit records capture user ID, date, time, and type of event, but lack granular packet data.', artifacts: [] },
   { id: 'AU-6', family: 'AU', title: 'Audit Review, Analysis, and Reporting', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Automated daily report generation is not yet configured.', artifacts: [] },
 
-  // Awareness and Training (AT) - 2 controls
-  { id: 'AT-2', family: 'AT', title: 'Security Awareness Training', status: 'Not Implemented', required: true, severity: 'Low', procedure: 'Annual security training is required, but tracking completion in the LMS is incomplete.', artifacts: [] },
-  { id: 'AT-3', family: 'AT', title: 'Role-Based Training', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Role-specific training modules for developers and ISSOs are not finalized.', artifacts: [] },
+  // Certification, Accreditation, and Security Assessment (CA) - 2 controls
+  { id: 'CA-2', family: 'CA', title: 'Security Assessments', status: 'Not Implemented', required: true, severity: 'High', procedure: 'The initial security assessment by the 3PAO is pending scheduling.', artifacts: [] },
+  { id: 'CA-7', family: 'CA', title: 'Continuous Monitoring (ISCM)', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'The ISCM strategy is defined, but control automation is limited to technical checks.', artifacts: ['ISCM Plan'] },
   
-  // Configuration Management (CM) - 4 controls
+  // Configuration Management (CM) - 4 controls + enhancement
   { id: 'CM-2', family: 'CM', title: 'Baseline Configuration', status: 'Implemented', required: true, severity: 'Moderate', procedure: 'A secure baseline configuration is documented and approved for all production servers.', artifacts: ['CM Policy Document'] },
   { id: 'CM-3', family: 'CM', title: 'Configuration Change Control', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Changes are tracked via Jira tickets, but unauthorized changes can still occur during emergency operations.', artifacts: ['Change Management Process'] },
+  { id: 'CM-3(1)', family: 'CM', title: 'Automated Change Control', status: 'Not Implemented', required: true, severity: 'High', procedure: 'The system lacks automated checks to ensure all production changes correlate to an approved ticket.', artifacts: [] },
   { id: 'CM-6', family: 'CM', title: 'Configuration Settings', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Continuous monitoring for drift from the baseline is not yet implemented.', artifacts: [] },
   { id: 'CM-7', family: 'CM', title: 'Least Functionality', status: 'Implemented', required: true, severity: 'Moderate', procedure: 'All non-essential services are disabled via whitelisting.', artifacts: ['App Whitelist Policy'] },
 
-  // Incident Response (IR) - 2 controls
+  // Contingency Planning (CP) - 2 controls
+  { id: 'CP-2', family: 'CP', title: 'Contingency Plan', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'The Disaster Recovery (DR) plan is drafted but requires annual testing.', artifacts: ['DR Plan Draft'] },
+  { id: 'CP-9', family: 'CP', title: 'System Backup', status: 'Implemented', required: true, severity: 'High', procedure: 'Full system backups are performed nightly and stored offsite.', artifacts: ['Backup Logs'] },
+
+  // Identification and Authentication (IA) - 2 controls
+  { id: 'IA-2', family: 'IA', title: 'Identification and Authentication', status: 'Implemented', required: true, severity: 'High', procedure: 'MFA is enforced for all system access via a FIPS 201-compliant IdP.', artifacts: ['MFA Policy'] },
+  { id: 'IA-5', family: 'IA', title: 'Authenticator Management', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'Credential rotation is automated, but emergency break-glass account procedures are not formally documented.', artifacts: [] },
+
+  // Incident Response (IR) - 2 controls + enhancement
   { id: 'IR-4', family: 'IR', title: 'Incident Handling', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'The Incident Response Plan (IRP) is approved, but automated containment measures are pending implementation.', artifacts: ['IR Plan v3.0'] },
+  { id: 'IR-4(1)', family: 'IR', title: 'Automated Incident Reporting', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Automated reporting to external federal agencies upon a major incident is not configured.', artifacts: [] },
   { id: 'IR-5', family: 'IR', title: 'Incident Monitoring and Detection', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Threat feeds are integrated, but custom correlation rules need development.', artifacts: [] },
+
+  // Maintenance (MA) - 2 controls
+  { id: 'MA-2', family: 'MA', title: 'Controlled Maintenance', status: 'Implemented', required: true, severity: 'Moderate', procedure: 'All system maintenance is performed using validated tools and logged via the CM process.', artifacts: ['Maintenance Log Policy'] },
+  { id: 'MA-4', family: 'MA', title: 'Remote Maintenance', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Remote access is limited to VPN, but session logging is inconsistent.', artifacts: [] },
 
   // Media Protection (MP) - 2 controls
   { id: 'MP-2', family: 'MP', title: 'Media Access', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Physical media access is not sufficiently restricted.', artifacts: [] },
@@ -60,6 +77,21 @@ const initialControls = [
   { id: 'PE-2', family: 'PE', title: 'Physical Access Authorizations', status: 'Implemented', required: true, severity: 'Low', procedure: 'Access is controlled by badges and documented in the access control system.', artifacts: ['Access Badge Policy'] },
   { id: 'PE-3', family: 'PE', title: 'Physical Access Control', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'All entry points have key card readers, but external storage cages require secondary locking mechanisms.', artifacts: [] },
 
+  // Program Management (PM) - 2 controls
+  { id: 'PM-1', family: 'PM', title: 'Security and Privacy Program Plan', status: 'Implemented', required: true, severity: 'Low', procedure: 'The overall Security and Privacy program plan is documented and formally approved.', artifacts: ['Program Plan'] },
+  { id: 'PM-14', family: 'PM', title: 'Threat Monitoring', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'We subscribe to threat intelligence feeds, but haven\'t fully integrated them into the SIEM ruleset.', artifacts: [] },
+
+  // Personnel Security (PS) - 2 controls
+  { id: 'PS-3', family: 'PS', title: 'Personnel Screening', status: 'Implemented', required: true, severity: 'High', procedure: 'All personnel undergo background checks prior to access.', artifacts: ['HR Policy'] },
+  { id: 'PS-4', family: 'PS', title: 'Personnel Termination', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Formal, rapid deprovisioning process upon employee termination is not consistently applied.', artifacts: [] },
+
+  // Planning (PL) - 2 controls
+  { id: 'PL-2', family: 'PL', title: 'System Security and Privacy Plan', status: 'Implemented', required: true, severity: 'High', procedure: 'The SSP is maintained and reviewed annually (this application manages it).', artifacts: ['SSP Document'] },
+  { id: 'PL-4', family: 'PL', title: 'Rules of Behavior', status: 'Partially Implemented', required: true, severity: 'Low', procedure: 'Users sign a Rules of Behavior agreement upon onboarding, but it needs an annual refresher.', artifacts: ['RoB Signature Log'] },
+
+  // Privacy (PT) - 1 control
+  { id: 'PT-1', family: 'PT', title: 'Privacy Policy and Procedures', status: 'Implemented', required: true, severity: 'Low', procedure: 'A formal privacy policy is maintained and easily accessible to all data subjects.', artifacts: ['Privacy Policy'] },
+  
   // Risk Assessment (RA) - 2 controls
   { id: 'RA-3', family: 'RA', title: 'Vulnerability Scanning', status: 'Implemented', required: true, severity: 'Low', procedure: 'Weekly vulnerability scanning is performed and recorded.', artifacts: ['Monthly Scan Log'] },
   { id: 'RA-5', family: 'RA', title: 'Vulnerability Monitoring', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Threat and vulnerability monitoring tools are deployed, but analyst coverage is intermittent.', artifacts: [] },
@@ -69,9 +101,20 @@ const initialControls = [
   { id: 'SA-11', family: 'SA', title: 'Developer Testing and Evaluation', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'SAST and DAST scanning is performed manually, but not integrated into the automated CI/CD pipeline.', artifacts: [] },
   { id: 'SA-12', family: 'SA', title: 'Supply Chain Protection (SCRM)', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Formal SCRM plan and COTS vetting procedures are currently under development.', artifacts: [] },
   { id: 'SA-15', family: 'SA', title: 'Development Process, Standards, and Tools', status: 'Not Implemented', required: true, severity: 'Low', procedure: 'Development standards are documented, but automated enforcement is lacking.', artifacts: [] },
-  
-  // Example for a family with zero controls implemented:
-  // { id: 'SC-1', family: 'SC', title: 'System and Communications Protection Policy', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Examine SC Policy', artifacts: [] },
+
+  // System and Communications Protection (SC) - 2 controls
+  { id: 'SC-7', family: 'SC', title: 'Boundary Protection', status: 'Implemented', required: true, severity: 'High', procedure: 'Firewalls enforce boundary protection rules based on approved security policies.', artifacts: ['Firewall Config'] },
+  { id: 'SC-28', family: 'SC', title: 'Protection of Information at Rest', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'CUI is encrypted at rest using AES-256, but FIPS 140-3 validation is pending for the crypto module.', artifacts: [] },
+
+  // System and Information Integrity (SI) - 2 controls
+  { id: 'SI-3', family: 'SI', title: 'Malicious Code Protection', status: 'Implemented', required: true, severity: 'High', procedure: 'Anti-malware software is deployed, updated, and centrally managed on all endpoints.', artifacts: ['AV Logs'] },
+  { id: 'SI-10', family: 'SI', title: 'Software and Firmware Integrity', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Cryptographic hash checks on application binaries are not performed prior to deployment.', artifacts: [] },
+
+  // Supply Chain Risk Management (SR) - 1 control
+  { id: 'SR-4', family: 'SR', title: 'Supply Chain Protection', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'We utilize vetted suppliers, but formal, periodic auditing of vendor facilities is not performed.', artifacts: [] },
+
+  // Security Assessment and Authorization (CA) - 1 control
+  { id: 'CA-1', family: 'CA', title: 'Security Assessment and Authorization Policy', status: 'Implemented', required: true, severity: 'Low', procedure: 'Policy governing RMF process management is documented in this platform.', artifacts: ['CA Policy'] },
 ];
 
 // Initial Risk Data (Simulating NIST 800-30/39 requirements)
@@ -100,13 +143,61 @@ const initialRiskData = [
 
 // Initial Audit Log Data (Simulating AU-3 requirement for immutable logs)
 const initialAuditLog = [
-    { timestamp: new Date().toLocaleString(), user: 'System Init', role: 'System', action: 'Application Start', detail: 'Compliance platform initialized. 25 controls loaded.' },
+    { timestamp: new Date().toLocaleString(), user: 'System Init', role: 'System', action: 'Application Start', detail: 'Compliance platform initialized. 40+ controls loaded covering all 20 families.' },
     { timestamp: new Date(Date.now() - 3600000).toLocaleString(), user: 'ISSM: John Smith', role: 'ISSM', action: 'Control Update', detail: 'AC-3 status manually changed to Partially Implemented. Artifact: RBAC Matrix v1.0 added.' },
 ];
 
 const CONTROL_STATUSES = ['Implemented', 'Partially Implemented', 'Not Implemented', 'Not Applicable'];
 
-// --- 2. MAIN APPLICATION COMPONENT ---
+// --- 3. REUSABLE UI COMPONENTS ---
+
+const MetricCard = ({ title, value, unit = '', className = '' }) => (
+    <div className={`p-6 rounded-xl shadow-xl backdrop-blur-sm bg-white/10 border border-gray-700/50 ${className}`}>
+      <p className="text-sm font-medium text-gray-400 uppercase tracking-widest">{title}</p>
+      <p className="mt-1 text-5xl font-extrabold text-white">
+        {value}
+        <span className="text-2xl font-semibold ml-1 text-gray-300">{unit}</span>
+      </p>
+    </div>
+);
+
+const StatusPill = ({ status, severity, size = 'xs' }) => {
+    let colorClass = 'bg-gray-600';
+    let textColor = 'text-white';
+    if (status === 'Implemented') { colorClass = 'bg-green-600/70'; textColor = 'text-white'; }
+    else if (status === 'Partially Implemented') { colorClass = 'bg-yellow-500/70'; textColor = 'text-black'; }
+    else if (status === 'Not Implemented') { colorClass = 'bg-red-600/70'; textColor = 'text-white'; }
+    else if (status === 'Not Scoped') { colorClass = 'bg-gray-800/70'; textColor = 'text-gray-400'; }
+
+    let severityClass = 'text-gray-400';
+    if (severity === 'High') severityClass = 'text-red-400';
+    else if (severity === 'Moderate') severityClass = 'text-yellow-400';
+    else if (severity === 'Low') severityClass = 'text-green-400';
+
+    return (
+      <div className="flex items-center space-x-2">
+        <span className={`px-2 py-0.5 text-${size} font-semibold rounded-full ${colorClass} ${textColor}`}>{status}</span>
+        {severity && <span className={`text-${size} font-medium ${severityClass}`}>{severity}</span>}
+      </div>
+    );
+};
+  
+const TabButton = ({ id, label, activeTab, setActiveTab, currentRole }) => (
+    <button
+      onClick={() => setActiveTab(id)}
+      className={`px-4 py-2 font-semibold transition-colors duration-200 border-b-2
+        ${activeTab === id
+          ? 'border-cyan-400 text-cyan-400'
+          : 'border-transparent text-gray-400 hover:text-white'
+        }`}
+        disabled={id === 'authorization' && currentRole !== 'AO'}
+    >
+      {label}
+      {id === 'authorization' && currentRole === 'AO' && <span className='ml-2 text-xs bg-red-700/50 px-2 py-0.5 rounded'>AO ONLY</span>}
+    </button>
+);
+
+// --- 4. MAIN APPLICATION COMPONENT ---
 
 const App = () => {
   const [controls, setControls] = useState(initialControls);
@@ -180,18 +271,31 @@ const App = () => {
       setFileName(file.name);
       // NOTE: In a real app, file content would be loaded here and sent to OCR/NLP API.
       // For the simulation, we still rely on the user pasting text below.
-      setMessage({ type: 'info', text: `File "${file.name}" uploaded. Processing via simulated OCR. Paste extracted text below to analyze.` });
+      setMessage({ type: 'info', text: `File "${file.name}" uploaded. Processing via simulated OCR. Enter mock text below to analyze.` });
     }
   };
 
-  // --- 3. CORE AUTOMATION FUNCTIONS ---
+  // --- CORE AUTOMATION FUNCTIONS ---
 
   // Simulates the LLM/NLP Document Analysis (Automated Documentation Analysis)
   const handleDocumentUpload = useCallback(() => {
-    if (!documentContent) {
-      setMessage({ type: 'error', text: 'Please paste the OCR/extracted text to analyze.' });
+    if (!fileName) {
+      setMessage({ type: 'error', text: 'Please upload a policy file first.' });
       return;
     }
+
+    // --- MOCK POLICY CONTENT (Simulating OCR Output) ---
+    const mockPolicyContent = `
+        Section 3.1: Access Control. The organization mandates annual security training for all personnel (AT-2) and uses LMS records to verify completion. 
+        Access enforcement is handled by implementing a Zero Trust Architecture (AC-3) across the network boundary. 
+        Furthermore, the least privilege principle (AC-6) is strictly followed via a mandatory quarterly review of user permissions.
+        Section 5.2: Media Protection. All magnetic media is destroyed or wiped according to NSS Manual 4009 (MP-6) standards by the facilities manager.
+        The overall Continuous Monitoring program (CA-7) uses automated tools to check for configuration baseline enforcement (CM-6) every 12 hours.
+        The formal Supply Chain Risk Management (SA-12) plan requires vetting for all COTS components before acquisition.
+    `;
+    const policySentences = mockPolicyContent.split('.').map(s => s.trim()).filter(s => s.length > 1);
+    // --- END MOCK POLICY CONTENT ---
+
 
     if (!currentRoleConfig.permissions.includes('update_evidence')) {
         setMessage({ type: 'error', text: 'Access Denied: Only ISSM/System Owner can update evidence via this function.' });
@@ -199,97 +303,60 @@ const App = () => {
     }
 
     setIsProcessing(true);
-    setMessage({ type: 'info', text: 'AI/NLP Engine performing inference on extracted policy text... (Simulated LLM Analysis)' });
+    setMessage({ type: 'info', text: 'AI/NLP Engine performing targeted extraction on uploaded policy text...' });
 
     // Use a timeout to simulate API latency
     setTimeout(() => {
       const newControls = [...controls];
       let controlsUpdated = 0;
-      const lowerCaseContent = documentContent.toLowerCase();
+      const updatedControlIds = [];
       const timestamp = new Date().toLocaleDateString();
-      // Use the simulated file name if available, otherwise use a generic name
-      const artifactBaseName = fileName || `Policy Document (${timestamp})`;
+      const artifactBaseName = fileName;
 
-      // Mock AI/NLP Inference Logic: Map keywords to control status updates
+      // Map of Control IDs to their required keywords and placeholder procedures
+      const controlKeywords = {
+          'AC-3': { keywords: ['zero trust architecture', 'access enforcement'], procedure: null },
+          'AC-6': { keywords: ['least privilege principle', 'periodic review of user permissions'], procedure: null },
+          'CM-6': { keywords: ['configuration baseline enforcement', 'automated tools to check for drift'], procedure: null },
+          'AT-2': { keywords: ['annual security training', 'lms records'], procedure: null },
+          'MP-6': { keywords: ['media is destroyed or wiped', 'nss manual 4009'], procedure: null },
+          'SA-12': { keywords: ['supply chain risk management', 'vetting for all cots components'], procedure: null },
+          'CA-7': { keywords: ['continuous monitoring program', 'iscm strategy'], procedure: null },
+      };
+
+      // 1. Perform Targeted Text Extraction
+      policySentences.forEach(sentence => {
+          const lowerCaseSentence = sentence.toLowerCase();
+          
+          Object.keys(controlKeywords).forEach(controlId => {
+              const controlConfig = controlKeywords[controlId];
+              // Check if any keyword matches AND we haven't already found a narrative for this control
+              if (!controlConfig.procedure && controlConfig.keywords.some(keyword => lowerCaseSentence.includes(keyword))) {
+                  // Capture the exact sentence/phrase as the SSP narrative
+                  controlKeywords[controlId].procedure = sentence.trim() + '.';
+              }
+          });
+      });
+
+      // 2. Update Control Status and Artifacts
+      Object.keys(controlKeywords).forEach(controlId => {
+          const extractedProcedure = controlKeywords[controlId].procedure;
+          
+          if (extractedProcedure) {
+              const control = newControls.find(c => c.id === controlId);
+              if (control && control.status !== 'Implemented') {
+                  control.status = 'Implemented';
+                  control.artifacts.push(`${artifactBaseName} - Narrative Extracted`);
+                  
+                  // Use the extracted sentence as the new procedure
+                  control.procedure = extractedProcedure; 
+                  
+                  controlsUpdated++;
+                  updatedControlIds.push(control.id);
+              }
+          }
+      });
       
-      // AC-3: Access Enforcement (ZTA)
-      if (lowerCaseContent.includes('zero trust architecture') || lowerCaseContent.includes('least privilege principle')) {
-        const ac3 = newControls.find(c => c.id === 'AC-3');
-        if (ac3 && ac3.status !== 'Implemented') {
-          ac3.status = 'Implemented';
-          ac3.artifacts.push(`${artifactBaseName} - ZTA Confirmed`);
-          controlsUpdated++;
-          ac3.procedure = `NLP CONFIRMATION: ZTA enforcement confirmed via policy. Access control mechanism verified via automated checks.`;
-        }
-      }
-
-      // AC-6: Least Privilege
-      if (lowerCaseContent.includes('access granted only as necessary') || lowerCaseContent.includes('periodic review of user permissions')) {
-        const ac6 = newControls.find(c => c.id === 'AC-6');
-        if (ac6 && ac6.status !== 'Implemented') {
-          ac6.status = 'Implemented';
-          ac6.artifacts.push(`${artifactBaseName} - Least Privilege Policy Confirmed`);
-          controlsUpdated++;
-          ac6.procedure = `NLP CONFIRMATION: Policy requires periodic review of user permissions to enforce least privilege.`;
-        }
-      }
-
-      // AU-6: Audit Review, Analysis, and Reporting
-      if (lowerCaseContent.includes('daily log review') || lowerCaseContent.includes('incident analysts review logs')) {
-        const au6 = newControls.find(c => c.id === 'AU-6');
-        if (au6 && au6.status !== 'Implemented') {
-          au6.status = 'Implemented';
-          au6.artifacts.push(`${artifactBaseName} - Log Review Policy Confirmed`);
-          controlsUpdated++;
-          au6.procedure = `NLP CONFIRMATION: Policy mandates daily log review by incident analysts and automated reporting to SIEM.`;
-        }
-      }
-
-      // CM-6: Configuration Settings
-      if (lowerCaseContent.includes('configuration baseline enforcement') || lowerCaseContent.includes('continuous monitoring for drift')) {
-        const cm6 = newControls.find(c => c.id === 'CM-6');
-        if (cm6 && cm6.status !== 'Implemented') {
-          cm6.status = 'Implemented';
-          cm6.artifacts.push(`${artifactBaseName} - CM Baseline Confirmed`);
-          controlsUpdated++;
-          cm6.procedure = `NLP CONFIRMATION: Continuous monitoring for configuration drift is documented and enforced by automated tools.`;
-        }
-      }
-
-      // AT-2: Security Awareness Training
-      if (lowerCaseContent.includes('annual security training') || lowerCaseContent.includes('lms records')) {
-        const at2 = newControls.find(c => c.id === 'AT-2');
-        if (at2 && at2.status !== 'Implemented') {
-          at2.status = 'Implemented';
-          at2.artifacts.push(`${artifactBaseName} - Training Compliance Confirmed`);
-          controlsUpdated++;
-          at2.procedure = `NLP CONFIRMATION: Annual security training requirement verified. LMS records are being tracked.`;
-        }
-      }
-
-      // MP-6: Media Sanitization
-      if (lowerCaseContent.includes('nss manual 4009') || lowerCaseContent.includes('destroying or wiping media')) {
-        const mp6 = newControls.find(c => c.id === 'MP-6');
-        if (mp6 && mp6.status !== 'Implemented') {
-          mp6.status = 'Implemented';
-          mp6.artifacts.push(`${artifactBaseName} - Sanitization Policy Confirmed`);
-          controlsUpdated++;
-          mp6.procedure = `NLP CONFIRMATION: Media sanitization procedures follow NSS Manual 4009 standards for destruction and cryptographic erase.`;
-        }
-      }
-
-      // SA-12: Supply Chain Protection (SCRM)
-      if (lowerCaseContent.includes('supply chain risk management') || lowerCaseContent.includes('vetted cots components')) {
-        const sa12 = newControls.find(c => c.id === 'SA-12');
-        if (sa12 && sa12.status !== 'Implemented') {
-          sa12.status = 'Implemented';
-          sa12.artifacts.push(`${artifactBaseName} - SCRM Policy Confirmed`);
-          controlsUpdated++;
-          sa12.procedure = `NLP CONFIRMATION: Formal SCRM plan is in place, requiring vetting for all COTS components before acquisition.`;
-        }
-      }
-
-
       setControls(newControls);
 
       // --- Audit Logging Logic ---
@@ -298,8 +365,8 @@ const App = () => {
           timestamp: new Date().toLocaleString(),
           user: `${currentRole}: Automated Engine`,
           role: currentRole,
-          action: 'NLP/OCR Evidence Ingestion',
-          detail: `${controlsUpdated} controls were automatically updated and evidence mapped from ${artifactBaseName}.`,
+          action: 'NLP/OCR Targeted Extraction',
+          detail: `${controlsUpdated} controls had their narratives extracted: [${updatedControlIds.join(', ')}].`,
         };
         // Prepend the new log entry
         setAuditLog(prevLog => [newLogEntry, ...prevLog]); 
@@ -307,9 +374,12 @@ const App = () => {
       // --- End Audit Logging Logic ---
       
       setIsProcessing(false);
-      setMessage({ type: 'success', text: `NLP Analysis complete. ${controlsUpdated} controls were automatically updated and evidence mapped from ${artifactBaseName}.` });
+      setMessage({ 
+          type: 'success', 
+          text: `Targeted NLP Extraction complete on "${artifactBaseName}". ${controlsUpdated} controls had their narratives auto-populated: [${updatedControlIds.join(', ')}].` 
+      });
     }, 2500);
-  }, [documentContent, controls, fileName, currentRole, currentRoleConfig.permissions]);
+  }, [controls, fileName, currentRole, currentRoleConfig.permissions]);
 
   // Simulates the Continuous Control Monitoring (CCM) Engine (NIST SP 800-137)
   const runContinuousMonitoring = useCallback(() => {
@@ -419,18 +489,19 @@ const App = () => {
         return;
     }
     
-    const deficiencies = controls.filter(c => c.status !== 'Implemented' && c.status !== 'Not Applicable');
+    // Find all controls that are not fully implemented and are not currently in an 'Open' POA&M
+    const deficiencies = controls.filter(c => 
+        c.status !== 'Implemented' && 
+        c.status !== 'Not Applicable' &&
+        !poamList.some(p => p.controlId === c.id && p.status === 'Open')
+    );
     
     if (deficiencies.length === 0) {
-      setMessage({ type: 'info', text: 'No deficiencies found. All scoped controls are Implemented.' });
-      setPoamList([]);
+      setMessage({ type: 'info', text: 'No new deficiencies found. All current findings are either Implemented or already in the Open POA&M list.' });
       return;
     }
 
-    const newPoamList = deficiencies.map(c => {
-      const existing = poamList.find(p => p.controlId === c.id);
-      if (existing) return existing; // Keep existing POA&Ms if they haven't been resolved
-
+    const newPoamEntries = deficiencies.map(c => {
       // POA&M Automation Logic: Determine details based on control metadata
       let remediationSteps = `Develop and implement a complete policy for ${c.title}.`;
       let dueDate = new Date();
@@ -460,7 +531,7 @@ const App = () => {
       };
     });
     
-    setPoamList(newPoamList);
+    setPoamList(prev => [...prev.filter(p => p.status === 'Open'), ...newPoamEntries]);
     
     // Log POA&M Generation action
     const newLogEntry = {
@@ -468,12 +539,69 @@ const App = () => {
         user: `${currentRole}: Manual Action`,
         role: currentRole,
         action: 'POA&M Generation',
-        detail: `Generated new POA&M list. ${newPoamList.length} deficiencies detected.`,
+        detail: `Generated new POA&M list. ${newPoamEntries.length} new deficiencies detected.`,
     };
     setAuditLog(prevLog => [newLogEntry, ...prevLog]);
 
-    setMessage({ type: 'success', text: `POA&M generated successfully. ${newPoamList.length} deficiencies detected and logged.` });
+    setMessage({ type: 'success', text: `POA&M generated successfully. ${newPoamEntries.length} new deficiencies detected and logged.` });
   }, [controls, poamList, currentRole, currentRoleConfig.permissions]);
+
+  // NEW: Handle POA&M closure/mitigation
+  const handlePoamClosure = useCallback((poamId, newStatus) => {
+    if (!currentRoleConfig.permissions.includes('edit_controls')) {
+        setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can close POA&M entries.' });
+        return;
+    }
+
+    let closedPoam;
+    const newPoamList = poamList.map(p => {
+        if (p.id === poamId) {
+            closedPoam = p;
+            return { ...p, status: newStatus, closureDate: new Date().toLocaleDateString() };
+        }
+        return p;
+    });
+
+    if (closedPoam) {
+        setPoamList(newPoamList);
+
+        // Check if the control has any other OPEN POA&Ms.
+        const hasOtherOpenPoams = newPoamList.some(p => p.controlId === closedPoam.controlId && p.status === 'Open');
+
+        // If no other open POA&Ms for this control, update the control status to Implemented.
+        if (!hasOtherOpenPoams && newStatus === 'Closed') {
+            setControls(prevControls => prevControls.map(c => {
+                if (c.id === closedPoam.controlId) {
+                    return { ...c, status: 'Implemented' };
+                }
+                return c;
+            }));
+
+            const newLogEntry = {
+                timestamp: new Date().toLocaleString(),
+                user: 'System: POA&M Sync',
+                role: 'System',
+                action: 'Control Status Sync',
+                detail: `Control ${closedPoam.controlId} synchronized to 'Implemented' as all associated POA&M findings are now Closed.`,
+            };
+            setAuditLog(prevLog => [newLogEntry, ...prevLog]);
+            setMessage(prev => ({ type: 'success', text: `${prev.text} | Control ${closedPoam.controlId} status auto-updated to Implemented.` }));
+        }
+
+        const logAction = newStatus === 'Closed' ? 'POA&M Closed/Mitigated' : 'POA&M Risk Accepted';
+        const newLogEntry = {
+            timestamp: new Date().toLocaleString(),
+            user: `${currentRole}: Manual Action`,
+            role: currentRole,
+            action: logAction,
+            detail: `Finding ${closedPoam.controlId} marked as ${newStatus}. Requires final eMASS update.`,
+        };
+        setAuditLog(prevLog => [newLogEntry, ...prevLog]);
+        
+        setMessage(prev => ({ type: 'success', text: `POA&M finding for ${closedPoam.controlId} marked as ${newStatus}.` }));
+    }
+  }, [poamList, currentRole, currentRoleConfig.permissions]);
+
   
   // Function to export POA&M data to eMASS compatible CSV
   const exportPoamToEmassCsv = useCallback(() => {
@@ -502,7 +630,7 @@ const App = () => {
       item.controlId,
       `Deficiency in ${item.finding}`, // Finding Description
       item.remediation.replace(/,/g, ''), // Remove commas from text fields to avoid CSV issues
-      "Open", // Status
+      item.status, // Use the current status (Open, Closed, Accepted)
       item.responsibleParty,
       item.dueDate, // Scheduled Completion Date
       item.severity
@@ -537,7 +665,7 @@ const App = () => {
     setMessage({ type: 'success', text: `POA&M data exported successfully as eMASS-compatible CSV.` });
   }, [poamList, currentRole, currentRoleConfig.permissions]);
   
-  // NEW: Function to export Security Controls data to eMASS compatible CSV
+  // UPDATED: Function to export Security Controls data to eMASS compatible CSV
   const exportControlsToEmassCsv = useCallback(() => {
       if (!currentRoleConfig.permissions.includes('edit_controls')) {
           setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can export control data.' });
@@ -549,25 +677,41 @@ const App = () => {
           return;
       }
 
-      // Define eMASS required headers for control implementation upload (simplified set for demo)
+      // Define expanded eMASS required headers based on the RMF Template provided by user
       const headers = [
-          "Control ID",
-          "Status",
-          "Implementation Narrative",
-          "Security Responsibility",
-          "Supporting Artifacts"
+        "Control Acronym",
+        "Control Information", // Used for Title/Description
+        "Control Implementation Status",
+        "Control Implementation Narrative",
+        "AP Acronym", // Assessment Procedure Acronym (Mocked)
+        "CCI",        // Control Correlation Identifier (Mocked)
+        "Date Tested",
+        "Tested By",
+        "Test Results" // Used for supporting artifacts/evidence
       ];
 
-      const rows = controls.map(item => [
-          item.id,
-          item.status,
-          // Replace commas and newlines in the narrative to prevent CSV formatting issues
-          `"${item.procedure.replace(/"/g, '""').replace(/\n/g, ' ')}"`, 
-          item.family === 'AC' || item.family === 'CM' ? 'System Owner' : 'ISSM',
-          item.artifacts.join("; ").replace(/"/g, '""') // Join artifacts with a semicolon
-      ]);
+      const dateTested = new Date().toLocaleDateString();
 
-      // Combine headers and rows, ensuring proper quoting for text fields
+      const rows = controls.map(item => {
+          // Mock Assessment Data based on Control ID structure
+          const apAcronym = item.id.includes('(') ? `${item.id.match(/^[A-Z]{2}-\d+/)[0]} E-MOCK` : `${item.id} E-1`;
+          const cciId = `CCI-${item.id.replace(/[^A-Z0-9]/g, '')}-MOCK`;
+          
+          return [
+              item.id, // Control Acronym
+              `Title: ${item.title}`, // Control Information (Simplified)
+              item.status, // Control Implementation Status
+              // Narrative, enclosed in quotes for multi-line/comma safety
+              `"${item.procedure.replace(/"/g, '""').replace(/\n/g, ' ')}"`, 
+              apAcronym, // AP Acronym (Mocked)
+              cciId, // CCI (Mocked)
+              dateTested, // Date Tested (Mocked)
+              "Automated Engine / ISSM", // Tested By (Mocked)
+              `Evidence Mapped: ${item.artifacts.join('; ').replace(/"/g, '""')}` // Test Results (Artifacts)
+          ];
+      });
+
+      // Combine headers and rows
       const csvContent = [
           headers.join(","),
           ...rows.map(row => row.join(","))
@@ -579,7 +723,7 @@ const App = () => {
       
       const link = document.createElement('a');
       link.href = url;
-      link.download = `eMASS_Controls_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.download = `eMASS_Controls_Export_Aligned_${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
       URL.revokeObjectURL(url);
       
@@ -588,12 +732,98 @@ const App = () => {
           timestamp: new Date().toLocaleString(),
           user: `${currentRole}: Manual Action`,
           role: currentRole,
-          action: 'eMASS Controls Export',
-          detail: `Exported ${controls.length} Security Controls to eMASS CSV format.`,
+          action: 'eMASS Controls Export (Aligned)',
+          detail: `Exported ${controls.length} Security Controls to ALIGNED eMASS CSV format.`,
       };
       setAuditLog(prevLog => [newLogEntry, ...prevLog]);
 
-      setMessage({ type: 'success', text: `Security Control implementation data exported successfully as eMASS-compatible CSV.` });
+      setMessage({ type: 'success', text: `Security Control implementation data exported successfully as ALIGNED eMASS-compatible CSV.` });
+  }, [controls, currentRole, currentRoleConfig.permissions]);
+
+  // NEW: Function to handle eMASS Baseline CSV upload
+  const handleEmassBaselineUpload = useCallback((event) => {
+    if (!currentRoleConfig.permissions.includes('edit_controls')) {
+        setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can upload baseline data.' });
+        return;
+    }
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        setMessage({ type: 'error', text: 'Invalid file type. Please upload a CSV file compatible with eMASS exports.' });
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const text = e.target.result;
+        // Simplified CSV parsing (assumes headers are in the first row)
+        const lines = text.split('\n').filter(line => line.trim() !== '');
+        if (lines.length < 2) {
+            setMessage({ type: 'error', text: 'CSV is empty or missing data rows.' });
+            return;
+        }
+
+        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        
+        // Determine column indices based on expected eMASS headers
+        const controlIdIndex = headers.indexOf('Control Acronym');
+        const statusIndex = headers.indexOf('Control Implementation Status');
+        const narrativeIndex = headers.indexOf('Control Implementation Narrative');
+        const artifactIndex = headers.indexOf('Test Results');
+
+        if (controlIdIndex === -1 || statusIndex === -1) {
+             setMessage({ type: 'error', text: 'CSV Headers missing. Must contain "Control Acronym" and "Control Implementation Status".' });
+             return;
+        }
+        
+        const importedControls = lines.slice(1).map(line => {
+            const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.trim().replace(/"/g, '')); // Robust split ignoring commas inside quotes
+            
+            const statusRaw = values[statusIndex] || 'Not Implemented';
+            const status = statusRaw.includes('Implemented') ? 'Implemented' : 
+                           statusRaw.includes('Partial') ? 'Partially Implemented' : 
+                           statusRaw.includes('NA') ? 'Not Applicable' : 'Not Implemented';
+            
+            return {
+                id: values[controlIdIndex],
+                status: status,
+                procedure: (narrativeIndex !== -1 && values[narrativeIndex]) || 'Imported SSP narrative.',
+                artifacts: (artifactIndex !== -1 && values[artifactIndex]) ? values[artifactIndex].split(';').map(a => a.trim()) : [`Imported from ${file.name}`]
+            };
+        }).filter(c => c.id); // Filter out any empty lines/invalid IDs
+
+        let updatedCount = 0;
+        const newControlsMap = new Map(controls.map(c => [c.id, c]));
+
+        importedControls.forEach(imported => {
+            if (newControlsMap.has(imported.id)) {
+                const existing = newControlsMap.get(imported.id);
+                // Overwrite the mutable fields
+                newControlsMap.set(imported.id, {
+                    ...existing,
+                    status: imported.status,
+                    procedure: imported.procedure,
+                    artifacts: imported.artifacts,
+                });
+                updatedCount++;
+            }
+        });
+        
+        setControls(Array.from(newControlsMap.values()));
+
+        const newLogEntry = {
+            timestamp: new Date().toLocaleString(),
+            user: `${currentRole}: Manual Action`,
+            role: currentRole,
+            action: 'eMASS Baseline Import',
+            detail: `Imported ${updatedCount} controls from external eMASS template: ${file.name}.`,
+        };
+        setAuditLog(prevLog => [newLogEntry, ...prevLog]);
+
+        setMessage({ type: 'success', text: `Baseline import successful! ${updatedCount} controls have been updated using data from ${file.name}.` });
+    };
+    reader.readAsText(file);
   }, [controls, currentRole, currentRoleConfig.permissions]);
 
 
@@ -623,16 +853,17 @@ const App = () => {
     };
     
     // Function to handle manual status change via dropdown
-    const handleManualStatusChange = (newStatus) => {
+    const handleManualStatusChange = (newStatus, controlId) => {
         if (!currentRoleConfig.permissions.includes('edit_controls')) {
             setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can manually override control status.' });
             return;
         }
 
-        if (!selectedControlId) return;
+        const idToUpdate = controlId || selectedControlId;
+        if (!idToUpdate) return;
 
         const newControls = controls.map(c => {
-            if (c.id === selectedControlId) {
+            if (c.id === idToUpdate) {
                 // Log the status change
                 const newLogEntry = {
                     timestamp: new Date().toLocaleString(),
@@ -643,6 +874,10 @@ const App = () => {
                 };
                 setAuditLog(prevLog => [newLogEntry, ...prevLog]); 
 
+                // Ensure the editor pane is updated if this control is currently selected
+                if (idToUpdate === selectedControlId) {
+                    setManualNarrative(c.procedure); // Re-sync narrative after status change if needed
+                }
                 setMessage({ type: 'success', text: `Status for ${c.id} updated to ${newStatus} and logged to audit trail.` });
 
                 return { ...c, status: newStatus };
@@ -653,119 +888,17 @@ const App = () => {
     };
 
 
-  // --- 4. EXPORT & INTEGRATION SIMULATION (Existing logic) ---
-
-  const handleExport = (format) => {
-    // RBAC Check for Export - Typically allowed for ISSM/AO/Auditor
-    if (!currentRoleConfig.permissions.includes('view_all')) {
-        setMessage({ type: 'error', text: 'Access Denied: Role must have view_all permission to export ATO package.' });
-        return;
-    }
-
-    const exportData = {
-      metadata: {
-        appId: 'ATO-in-a-Box-V1',
-        timestamp: new Date().toISOString(),
-        atoStatus, // Include the current ATO Status
-        complianceScore,
-        readinessLevel,
-      },
-      controls: controls.map(c => ({
-        id: c.id,
-        status: c.status,
-        artifacts: c.artifacts,
-        poamEntry: poamList.find(p => p.controlId === c.id) || null,
-      })),
-      riskRegister: riskRegister,
-      poam: poamList,
-      auditTrail: auditLog, // Include the audit trail in the export package
-    };
-    
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    // Simulate download
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ATO_Package_${format}_${new Date().getFullYear()}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    
-    // Log Export action
-    const newLogEntry = {
-        timestamp: new Date().toLocaleString(),
-        user: `${currentRole}: Manual Action`,
-        role: currentRole,
-        action: 'ATO Package Export',
-        detail: `Exported full ATO package in ${format} format (OSCAL compliant).`,
-    };
-    setAuditLog(prevLog => [newLogEntry, ...prevLog]);
-
-    setMessage({ type: 'info', text: `Export simulated: ATO package for ${controls.length} controls prepared for ${format} ingestion (OSCAL compliant).` });
-  };
-
-
-  // --- 5. UI COMPONENTS ---
-
-  const MetricCard = ({ title, value, unit = '', className = '' }) => (
-    <div className={`p-6 rounded-xl shadow-xl backdrop-blur-sm bg-white/10 border border-gray-700/50 ${className}`}>
-      <p className="text-sm font-medium text-gray-400 uppercase tracking-widest">{title}</p>
-      <p className="mt-1 text-5xl font-extrabold text-white">
-        {value}
-        <span className="text-2xl font-semibold ml-1 text-gray-300">{unit}</span>
-      </p>
-    </div>
-  );
-
-  // Reusable component for status pills
-  const StatusPill = ({ status, severity, size = 'xs' }) => {
-    let colorClass = 'bg-gray-600';
-    let textColor = 'text-white';
-    if (status === 'Implemented') { colorClass = 'bg-green-600/70'; textColor = 'text-white'; }
-    else if (status === 'Partially Implemented') { colorClass = 'bg-yellow-500/70'; textColor = 'text-black'; }
-    else if (status === 'Not Implemented') { colorClass = 'bg-red-600/70'; textColor = 'text-white'; }
-    else if (status === 'Not Scoped') { colorClass = 'bg-gray-800/70'; textColor = 'text-gray-400'; }
-
-    let severityClass = 'text-gray-400';
-    if (severity === 'High') severityClass = 'text-red-400';
-    else if (severity === 'Moderate') severityClass = 'text-yellow-400';
-    else if (severity === 'Low') severityClass = 'text-green-400';
-
-    return (
-      <div className="flex items-center space-x-2">
-        <span className={`px-2 py-0.5 text-${size} font-semibold rounded-full ${colorClass} ${textColor}`}>{status}</span>
-        {severity && <span className={`text-${size} font-medium ${severityClass}`}>{severity}</span>}
-      </div>
-    );
-  };
-  
-  const TabButton = ({ id, label }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={`px-4 py-2 font-semibold transition-colors duration-200 border-b-2
-        ${activeTab === id
-          ? 'border-cyan-400 text-cyan-400'
-          : 'border-transparent text-gray-400 hover:text-white'
-        }`}
-        disabled={id === 'authorization' && currentRole !== 'AO'}
-    >
-      {label}
-      {id === 'authorization' && currentRole === 'AO' && <span className='ml-2 text-xs bg-red-700/50 px-2 py-0.5 rounded'>AO ONLY</span>}
-    </button>
-  );
-
   // Manual Narrative Save Logic
-  const handleSaveNarrative = useCallback(() => {
+  const handleSaveNarrative = useCallback((controlId, newNarrative) => {
     if (!currentRoleConfig.permissions.includes('edit_controls')) {
         setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can save the SSP Narrative.' });
         return;
     }
 
-    if (!selectedControlId) return;
+    if (!controlId) return;
 
     const newControls = controls.map(c => {
-        if (c.id === selectedControlId) {
+        if (c.id === controlId) {
             // Log the change
             const newLogEntry = {
                 timestamp: new Date().toLocaleString(),
@@ -778,108 +911,82 @@ const App = () => {
 
             setMessage({ type: 'success', text: `SSP Narrative for ${c.id} saved and logged to audit trail.` });
 
-            return { ...c, procedure: manualNarrative }; // Update the procedure field
+            return { ...c, procedure: newNarrative }; // Update the procedure field
         }
         return c;
     });
     setControls(newControls);
-  }, [controls, selectedControlId, currentRole, currentRoleConfig.permissions, manualNarrative]);
 
-
-  const ManualControlEditor = () => {
-    const selectedControl = controls.find(c => c.id === selectedControlId);
-
-    if (!selectedControl) {
-        return <p className="text-gray-400 p-4">Select a control from the dropdown above to review or manually update its status and SSP narrative.</p>;
+    // If the saved control is the currently selected one in the editor pane, update that state too
+    if (controlId === selectedControlId) {
+        setManualNarrative(newNarrative);
     }
-
-    return (
-        <div className="p-6 bg-gray-800 rounded-lg border border-cyan-500/50 space-y-4">
-            <h3 className="text-xl font-bold text-cyan-400">{selectedControl.id}: {selectedControl.title}</h3>
-            
-            <div className='flex items-center space-x-6 pb-4 border-b border-gray-700'>
-                <p className='text-sm text-gray-300'>Current Status:</p>
-                <StatusPill status={selectedControl.status} severity={selectedControl.severity} size='base' />
-            </div>
-
-            {/* SSP Narrative View/Edit Area */}
-            <div className="space-y-2">
-                <label className="font-semibold text-cyan-300/80">Control Answer / SSP Narrative (Manual Edit)</label>
-                <textarea
-                    className="w-full h-32 p-3 text-sm rounded-lg bg-gray-900 border border-gray-600 text-gray-200 focus:ring-cyan-500 focus:border-cyan-500 resize-none"
-                    value={manualNarrative}
-                    onChange={(e) => setManualNarrative(e.target.value)}
-                    disabled={!currentRoleConfig.permissions.includes('edit_controls')}
-                />
-                <button
-                    onClick={handleSaveNarrative}
-                    disabled={!currentRoleConfig.permissions.includes('edit_controls') || manualNarrative === selectedControl.procedure}
-                    className="cyber-button px-4 py-2 text-sm rounded-lg bg-yellow-600 hover:bg-yellow-500 text-black font-bold disabled:bg-gray-600 disabled:text-gray-400"
-                >
-                    Save Narrative
-                </button>
-            </div>
+  }, [controls, selectedControlId, currentRole, currentRoleConfig.permissions]);
 
 
-            {/* Manual Status Override */}
-            <div className="pt-4 border-t border-gray-700">
-                <h4 className='text-lg font-semibold text-white mb-2'>Manual Status Override (ISSM/Auditor)</h4>
-                <div className='flex flex-wrap gap-3'>
-                    {CONTROL_STATUSES.filter(s => s !== 'Not Applicable').map(status => (
-                        <button
-                            key={status}
-                            onClick={() => handleManualStatusChange(status)}
-                            disabled={!currentRoleConfig.permissions.includes('edit_controls') || status === selectedControl.status}
-                            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-150 ${
-                                status === selectedControl.status 
-                                ? 'bg-cyan-700 text-white cursor-default' 
-                                : 'bg-gray-600 hover:bg-cyan-600 text-white'
-                            } disabled:bg-gray-700 disabled:text-gray-400`}
-                        >
-                            Mark as {status}
-                        </button>
-                    ))}
-                </div>
-                {!currentRoleConfig.permissions.includes('edit_controls') && 
-                    <p className='text-xs text-red-400 mt-2'>Permission Denied: Switch to ISSM/Auditor role to edit status or narrative.</p>
-                }
-            </div>
-        </div>
-    );
-  };
+  // --- 5. UI COMPONENTS DEFINITIONS (Moved up for scope clarity) ---
   
   // --- Accordion/Tree Item Component for Control Review ---
   const ControlFamilyAccordion = () => {
     const [expandedFamilies, setExpandedFamilies] = useState({});
+    const [openControlId, setOpenControlId] = useState(''); // State to track which single control editor is open
+    const [localNarrative, setLocalNarrative] = useState({}); // State to hold temporary edits for a control
 
-    // 1. Group controls by family (memoized)
+    // 1. Group controls by family and nest enhancements (Sub-Controls) under their parent.
     const groupedControls = useMemo(() => {
       const groups = {};
       Object.keys(CONTROL_FAMILIES).forEach(familyCode => {
         groups[familyCode] = {
           title: CONTROL_FAMILIES[familyCode],
-          controls: [],
+          controls: new Map(), // Use a map for easy parent lookups
           status: 'Not Scoped',
           totalControls: 0,
         };
       });
 
+      // Pass 1: Build the primary control list (Base controls only)
       controls.forEach(control => {
-        if (groups[control.family]) {
-          groups[control.family].controls.push(control);
+        const isEnhancement = control.id.includes('(');
+        if (!isEnhancement) {
+            if (groups[control.family]) {
+                groups[control.family].controls.set(control.id, {
+                    ...control,
+                    enhancements: [] // Add placeholder for children
+                });
+            }
         }
       });
 
-      // 2. Calculate family compliance status (worst case status)
+      // Pass 2: Nest the enhancements under their parent
+      controls.forEach(control => {
+        const isEnhancement = control.id.includes('(');
+        if (isEnhancement) {
+            // Find the base ID (e.g., 'AC-2' from 'AC-2(1)')
+            const baseIdMatch = control.id.match(/^[A-Z]{2}-\d+/);
+            if (baseIdMatch && groups[control.family]) {
+                const baseId = baseIdMatch[0];
+                const parentControl = groups[control.family].controls.get(baseId);
+                if (parentControl) {
+                    parentControl.enhancements.push(control);
+                }
+            }
+        }
+      });
+
+      // Convert the Maps back to arrays and calculate status metrics
       Object.keys(groups).forEach(familyCode => {
         const group = groups[familyCode];
-        group.totalControls = group.controls.length;
+        group.controls = Array.from(group.controls.values());
         
-        if (group.controls.length === 0) {
+        // Calculate total controls and status based on all nested items (base + enhancements)
+        const allItems = [...group.controls.flatMap(c => [c, ...c.enhancements])];
+        group.totalControls = allItems.length;
+
+        if (allItems.length === 0) {
             group.status = 'Not Scoped';
-        } else if (group.controls.some(c => c.status === 'Not Implemented')) {
+        } else if (allItems.some(c => c.status === 'Not Implemented')) {
             group.status = 'Not Implemented';
-        } else if (group.controls.some(c => c.status === 'Partially Implemented')) {
+        } else if (allItems.some(c => c.status === 'Partially Implemented')) {
             group.status = 'Partially Implemented';
         } else {
             group.status = 'Implemented';
@@ -895,9 +1002,119 @@ const App = () => {
         [familyCode]: !prev[familyCode]
       }));
     };
+    
+    // Function to handle control click (Level 2 & 3)
+    const toggleControlEditor = (controlId) => {
+        if (openControlId === controlId) {
+            setOpenControlId('');
+            setLocalNarrative({});
+        } else {
+            setOpenControlId(controlId);
+            const control = controls.find(c => c.id === controlId);
+            if (control) {
+                setLocalNarrative({ [controlId]: control.procedure });
+            }
+        }
+    };
+    
+    // Function to handle local narrative change
+    const handleLocalNarrativeChange = (controlId, value) => {
+        setLocalNarrative(prev => ({ ...prev, [controlId]: value }));
+    };
+
+    // Function to save the narrative from the inline editor
+    const handleInlineSave = (controlId) => {
+        const narrativeToSave = localNarrative[controlId];
+        handleSaveNarrative(controlId, narrativeToSave);
+        // Collapse the editor after saving
+        setOpenControlId('');
+        setLocalNarrative({});
+    }
+
+    // Common rendering function for both Base Control and Enhancement
+    const renderControlItem = (control, isEnhancement = false) => {
+        const isEditing = openControlId === control.id;
+        const paddingClass = isEnhancement ? 'ml-8' : 'ml-4';
+        const controlType = isEnhancement ? 'Enhancement' : 'Control';
+
+        return (
+            <div 
+                key={control.id} 
+                className={`${paddingClass} p-3 border-l-4 my-3 rounded-md transition-all duration-150 
+                  ${isEditing 
+                    ? 'border-cyan-400 bg-gray-800 shadow-lg' 
+                    : 'border-cyan-500/30 bg-gray-900/50'
+                  }`}
+            >
+                {/* Level 2/3: Control Header - Clickable to toggle editor */}
+                <button
+                    className="w-full text-left flex justify-between items-start"
+                    onClick={() => toggleControlEditor(control.id)}
+                >
+                    <div>
+                        <h4 className={`text-md font-semibold ${isEnhancement ? 'text-gray-300' : 'text-white'}`}>
+                            {control.id} - {control.title}
+                        </h4>
+                        {/* Read-only quick view */}
+                        <div className="mt-1 text-xs text-gray-400 truncate max-w-lg">
+                            <span className="font-semibold text-cyan-300/80">{controlType} Narrative:</span> {control.procedure || 'Click to add SSP Narrative...'}
+                        </div>
+                    </div>
+                    <div className='flex flex-col items-end space-y-1'>
+                        <StatusPill status={control.status} severity={control.severity} size='xs' />
+                        {control.artifacts.length > 0 && 
+                            <span className='text-xs text-green-400/80'>{control.artifacts.length} Artifacts Mapped</span>
+                        }
+                    </div>
+                </button>
+                
+                {/* Level 3/4: Inline Editor (Appears when toggled) */}
+                {isEditing && (
+                    <div className="mt-4 p-4 border-t border-gray-700 space-y-4">
+                        <h5 className="text-sm font-semibold text-cyan-300/80">SSP Narrative ({control.id} Answer)</h5>
+                        <textarea
+                            className="w-full h-24 p-2 text-sm rounded-lg bg-gray-900 border border-gray-600 text-gray-200 focus:ring-cyan-500 focus:border-cyan-500 resize-none"
+                            value={localNarrative[control.id] || control.procedure}
+                            onChange={(e) => handleLocalNarrativeChange(control.id, e.target.value)}
+                            disabled={!currentRoleConfig.permissions.includes('edit_controls')}
+                        />
+
+                        <div className="flex justify-between items-center pt-2">
+                            {/* Save Button */}
+                            <button
+                                onClick={() => handleInlineSave(control.id)}
+                                disabled={!currentRoleConfig.permissions.includes('edit_controls') || localNarrative[control.id] === control.procedure}
+                                className="cyber-button px-4 py-2 text-sm rounded-lg bg-yellow-600 hover:bg-yellow-500 text-black font-bold disabled:bg-gray-600 disabled:text-gray-400"
+                            >
+                                Save Narrative & Close Editor
+                            </button>
+                            
+                            {/* Status Override Buttons */}
+                            <div className='flex flex-wrap gap-2'>
+                                {CONTROL_STATUSES.filter(s => s !== 'Not Applicable').map(status => (
+                                    <button
+                                        key={status}
+                                        onClick={() => handleManualStatusChange(status, control.id)}
+                                        disabled={!currentRoleConfig.permissions.includes('edit_controls') || status === control.status}
+                                        className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors duration-150 ${
+                                            status === control.status 
+                                            ? 'bg-cyan-700 text-white cursor-default' 
+                                            : 'bg-gray-600 hover:bg-cyan-600 text-white'
+                                        } disabled:bg-gray-700 disabled:text-gray-400`}
+                                    >
+                                        Mark {status}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+              </div>
+        );
+    }
 
     return (
-      <div className="space-y-2 mt-6">
+      <div className="space-y-2">
         {Object.entries(groupedControls).map(([familyCode, familyData]) => (
           <div key={familyCode} className="bg-gray-800 rounded-lg shadow-md border border-gray-700">
             {/* Level 1: Family Header (Clickable) */}
@@ -928,31 +1145,15 @@ const App = () => {
             {expandedFamilies[familyCode] && familyData.totalControls > 0 && (
               <div className="p-4 pt-0 border-t border-gray-700 bg-gray-900/50 rounded-b-lg">
                 {familyData.controls.map((control) => (
-                  <div key={control.id} className="ml-4 p-3 border-l-2 border-cyan-500/50 my-3 rounded-md bg-gray-900">
-                    
-                    {/* Level 2: Control Header (Subcontrol) */}
-                    <div className='flex justify-between items-start'>
-                        <h4 className="text-md font-semibold text-white">
-                            {control.id} - {control.title}
-                        </h4>
-                        <div className='flex flex-col items-end space-y-1'>
-                            <StatusPill status={control.status} severity={control.severity} size='xs' />
-                            {control.artifacts.length > 0 && 
-                                <span className='text-xs text-green-400/80'>{control.artifacts.length} Artifacts Mapped</span>
-                            }
-                        </div>
+                    <div key={control.id} className='space-y-1'>
+                        {/* Level 2: Base Control */}
+                        {renderControlItem(control, false)}
+                        
+                        {/* Level 3: Enhancements (Sub-Controls) */}
+                        {control.enhancements.map(enhancement => (
+                            renderControlItem(enhancement, true)
+                        ))}
                     </div>
-                    
-                    {/* Level 3: Control Implementation Detail & Artifacts (Replaces Assessment Procedure) */}
-                    <div className="mt-2 space-y-2 text-sm text-gray-400">
-                        <p>
-                            <span className="font-semibold text-cyan-300/80">Control Implementation Detail (SSP Narrative):</span> {control.procedure}
-                        </p>
-                        <p className="text-xs">
-                            <span className="font-semibold text-gray-300">Evidence:</span> {control.artifacts.join(', ') || 'Awaiting NLP evidence...'}
-                        </p>
-                    </div>
-                  </div>
                 ))}
               </div>
             )}
@@ -972,6 +1173,74 @@ const App = () => {
   // --- END Accordion/Tree Component ---
 
 
+  // --- POA&M Closure/Status Management ---
+  const PoamTable = () => {
+    return (
+        <div className="bg-gray-800 rounded-b-xl shadow-2xl overflow-hidden border border-gray-700">
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ID / Control</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Finding</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Severity</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Remediation Action</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Due Date</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions (ISSM)</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                        {poamList.length === 0 && (
+                            <tr>
+                                <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                                    No Open POA&M findings. Click "Generate New POA&M Entries" to check current control status.
+                                </td>
+                            </tr>
+                        )}
+                        {poamList.map((poam) => (
+                            <tr key={poam.id} className="hover:bg-gray-700 transition-colors duration-150">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-400">{poam.controlId}</td>
+                                <td className="px-6 py-4 text-sm text-gray-300">{poam.finding}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-500">{poam.severity}</td>
+                                <td className="px-6 py-4 text-sm text-gray-400 max-w-xs">{poam.remediation}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-300">{poam.dueDate}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                    <span className={`px-2 py-0.5 rounded-full font-semibold ${poam.status === 'Open' ? 'bg-red-800 text-white' : poam.status === 'Closed' ? 'bg-green-600 text-black' : 'bg-yellow-500 text-black'}`}>
+                                        {poam.status}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                    {poam.status === 'Open' && currentRoleConfig.permissions.includes('edit_controls') ? (
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => handlePoamClosure(poam.id, 'Closed')}
+                                                className="px-3 py-1 text-xs bg-green-700 hover:bg-green-600 text-white rounded-md"
+                                                title="Mark as Mitigated (Final fix completed)"
+                                            >
+                                                Close
+                                            </button>
+                                            <button 
+                                                onClick={() => handlePoamClosure(poam.id, 'Accepted')}
+                                                className="px-3 py-1 text-xs bg-yellow-700 hover:bg-yellow-600 text-black rounded-md"
+                                                title="Mark as Accepted Risk (Will not be fixed)"
+                                            >
+                                                Accept Risk
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <span className="text-gray-500">Finalized</span>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    )
+  }
+
   // --- AO Authorization View Component (Inline for Single File) ---
     const AuthorizationView = () => (
         <div className='max-w-4xl mx-auto space-y-8 p-8 bg-gray-800 rounded-xl shadow-2xl border border-red-500/50'>
@@ -990,7 +1259,7 @@ const App = () => {
 
             <div className="grid grid-cols-3 gap-4">
                 <MetricCard title="Compliance Score" value={complianceScore} unit="%" />
-                <MetricCard title="Total POA&Ms" value={poamList.length} unit=" Open Findings" />
+                <MetricCard title="Total POA&Ms" value={poamList.length} unit=" Findings" />
                 <MetricCard title="Residual Risk" value={riskPosture} />
             </div>
 
@@ -1130,28 +1399,25 @@ const App = () => {
       `}</style>
 
       <header className="mb-8 border-b border-gray-700 pb-4">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-start items-center">
           <h1 className="text-3xl font-bold text-cyan-400 tracking-wider">
             ATO-in-a-Box | <span className="text-white">RMF Automation Platform</span>
           </h1>
           
-          {/* Role-Based Access Control (RBAC) Simulation */}
-          <div className="flex items-center space-x-3 test-sm">
-            <label className="text-gray-400">Current Role:</label>
+          {/* Explicitly removing the Role Selector and ATO Status Display */}
+          <div className="hidden">
             <select
               value={currentRole}
               onChange={(e) => setCurrentRole(e.target.value)}
-              className={`p-2 rounded-md border border-gray-600 ${currentRoleConfig.color} focus:ring-cyan-500 focus:border-cyan-500`}
+              // This selector is kept hidden but allows the underlying RBAC logic to be tested
+              // by changing the currentRole state, which controls button/feature availability.
             >
               {Object.entries(ROLES).map(([key, role]) => (
                 <option key={key} value={key}>{role.name} ({key})</option>
               ))}
             </select>
-            <span className="text-sm font-medium text-white px-2 py-1 rounded-md bg-gray-700 border border-cyan-500/50">
-                {currentRoleConfig.permissions.join(', ').toUpperCase()}
-            </span>
-            <span className={`text-sm font-medium px-2 py-1 rounded-md border ${atoStatus.includes('Approved') ? 'border-green-500 text-green-400' : atoStatus.includes('Denied') ? 'border-red-500 text-red-400' : 'border-yellow-500 text-yellow-400'} bg-gray-700/50`}>
-                ATO: {atoStatus}
+            <span className={`hidden`}>
+                ATO: {atoStatus} 
             </span>
           </div>
         </div>
@@ -1166,12 +1432,12 @@ const App = () => {
 
       {/* Tabs Navigation */}
       <div className="border-b border-gray-700 mb-6 flex space-x-4">
-        <TabButton id="dashboard" label="RMF Dashboard" />
-        <TabButton id="controls" label="Control Review (NIST 800-53)" />
-        <TabButton id="poam" label="POA&M Automation" />
-        <TabButton id="risk" label="Risk Register" />
-        <TabButton id="audit" label="Audit Trail" />
-        {currentRole === 'AO' && <TabButton id="authorization" label="Final Authorization" />}
+        <TabButton id="dashboard" label="RMF Dashboard" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
+        <TabButton id="controls" label="Control Review (NIST 800-53)" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
+        <TabButton id="poam" label="POA&M Automation" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
+        <TabButton id="risk" label="Risk Register" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
+        <TabButton id="audit" label="Audit Trail" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
+        {currentRole === 'AO' && <TabButton id="authorization" label="Final Authorization" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />}
       </div>
 
       <div className="space-y-8">
@@ -1220,79 +1486,69 @@ const App = () => {
 
         {/* --- CONTROL REVIEW VIEW --- */}
         {activeTab === 'controls' && (
-          <div>
-            <h2 className="text-2xl font-semibold mb-6 text-white border-l-4 border-cyan-400 pl-3">NIST SP 800-53 Rev. 5 Control Inventory</h2>
-            
-            {/* Manual Control Selector and Editor */}
-            <div className="p-4 bg-gray-800 rounded-xl border border-gray-700 mb-4">
-                <h3 className="text-lg font-semibold text-white mb-3">Manual Control Review / Status Update</h3>
-                <div className="flex items-center space-x-3">
-                    <label htmlFor="control-selector" className="text-gray-400 font-medium whitespace-nowrap">Select Control:</label>
-                    <select
-                        id="control-selector"
-                        value={selectedControlId}
-                        onChange={(e) => setSelectedControlId(e.target.value)}
-                        className="p-2 w-full max-w-sm rounded-md bg-gray-900 border border-gray-600 text-white focus:ring-cyan-500 focus:border-cyan-500"
-                    >
-                        <option value="">-- Select a Control ID --</option>
-                        {controls.map(c => (
-                            <option key={c.id} value={c.id}>
-                                {c.id} - {c.title}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div className='mt-4'>
-                    <ManualControlEditor />
-                </div>
+          <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
+            <div className="lg:col-span-2">
+                <h2 className="text-2xl font-semibold mb-6 text-white border-l-4 border-cyan-400 pl-3">NIST SP 800-53 Control Inventory & Editing</h2>
+                <ControlFamilyAccordion />
             </div>
 
-            {/* Hierarchical Tree View */}
-            <ControlFamilyAccordion />
-
-            {/* AI/NLP Ingestion Panel */}
-            <div className='mt-8 p-6 rounded-xl bg-gray-800 border border-cyan-500/50 shadow-2xl'>
-                <h3 className='text-xl font-semibold mb-3 text-cyan-400'>Automated Documentation Analysis (AI/NLP Engine)</h3>
-                <p className='text-sm text-gray-400 mb-4'>
-                    **OCR Prerequisite:** Upload your large PDF/Image policy file below. The system would first perform **Optical Character Recognition (OCR)** to extract all 100+ pages of text, which is then fed into the NLP engine.
-                </p>
+            <div className="lg:col-span-1 space-y-8">
                 
-                {/* Simulated File Upload Input */}
-                <div className='flex items-center space-x-4 mb-4'>
-                    <label htmlFor="file-upload" className="cyber-button cursor-pointer px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm disabled:bg-gray-600 disabled:shadow-none">
-                        {fileName ? `Change File (${fileName})` : 'Upload Policy File (PDF/Image)'}
-                    </label>
-                    <input
-                        id="file-upload"
-                        type="file"
-                        className="hidden"
-                        onChange={handleFileChange}
-                        disabled={isProcessing || !currentRoleConfig.permissions.includes('update_evidence')}
-                    />
-                     {fileName && (
-                        <p className="text-sm text-gray-300 truncate max-w-xs">{fileName} ready for text paste.</p>
-                    )}
+                {/* eMASS Baseline Import Panel */}
+                <div className='p-6 rounded-xl bg-gray-800 border border-yellow-500/50 shadow-2xl'>
+                    <h3 className='text-xl font-semibold mb-3 text-yellow-400'>Import Existing eMASS Baseline</h3>
+                    <p className='text-sm text-gray-400 mb-4'>
+                        Upload the exported Security Controls CSV file from a previous ATO package to instantly set your system's current compliance posture. **(Requires matching template format)**
+                    </p>
+                    <div className='flex items-center space-x-4'>
+                        <label htmlFor="emass-upload" className="cyber-button cursor-pointer px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-sm disabled:bg-gray-600 disabled:shadow-none">
+                            Upload eMASS Controls CSV
+                        </label>
+                        <input
+                            id="emass-upload"
+                            type="file"
+                            accept=".csv"
+                            className="hidden"
+                            onChange={handleEmassBaselineUpload}
+                            disabled={isProcessing || !currentRoleConfig.permissions.includes('edit_controls')}
+                        />
+                    </div>
                 </div>
 
-                <textarea
-                    className="w-full h-32 p-3 text-sm rounded-lg bg-gray-900 border border-gray-600 text-gray-200 focus:ring-cyan-500 focus:border-cyan-500"
-                    placeholder={`Paste the OCR-extracted text here (e.g., policy statements, narrative descriptions):\n\nExample Text to test multiple controls:\n"The organization employs a Zero Trust Architecture (AC-3) and requires periodic review of user permissions (AC-6). All media is destroyed or wiped according to NSS Manual 4009 (MP-6), and we maintain a formal Supply Chain Risk Management (SA-12) program." `}
-                    value={documentContent}
-                    onChange={(e) => setDocumentContent(e.target.value)}
-                    disabled={isProcessing || !currentRoleConfig.permissions.includes('update_evidence')}
-                />
-
-                <div className="flex justify-between items-center mt-4">
-                  <button
-                      onClick={handleDocumentUpload}
-                      disabled={isProcessing || !currentRoleConfig.permissions.includes('update_evidence')}
-                      className="cyber-button px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold disabled:bg-gray-600 disabled:shadow-none"
-                  >
-                      {isProcessing ? 'Analyzing Evidence...' : 'Analyze & Auto-Populate Controls'}
-                  </button>
-                  {!currentRoleConfig.permissions.includes('update_evidence') && (
-                      <p className='text-red-400 text-sm'>Access Denied: Only ISSM/System Owner can submit evidence.</p>
-                  )}
+                {/* AI/NLP Ingestion Panel (Now file upload only) */}
+                <div className='p-6 rounded-xl bg-gray-800 border border-cyan-500/50 shadow-2xl'>
+                    <h3 className='text-xl font-semibold mb-3 text-cyan-400'>Automated Documentation Analysis (AI/NLP Engine)</h3>
+                    <p className='text-sm text-gray-400 mb-4'>
+                        **OCR Prerequisite:** Upload a PDF/Image policy file below. The system simulates **OCR/NLP** to extract and analyze policy text for **automated control population**.
+                    </p>
+                    
+                    {/* Simulated File Upload Input */}
+                    <div className='space-y-4'>
+                        <label htmlFor="file-upload" className="cyber-button cursor-pointer w-full text-center px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm disabled:bg-gray-600 disabled:shadow-none">
+                            {fileName ? `Re-Upload File (${fileName})` : '1. Upload Policy File (PDF/Image)'}
+                        </label>
+                        <input
+                            id="file-upload"
+                            type="file"
+                            className="hidden"
+                            onChange={handleFileChange}
+                            disabled={isProcessing || !currentRoleConfig.permissions.includes('update_evidence')}
+                        />
+                        
+                        <button
+                            onClick={handleDocumentUpload}
+                            disabled={isProcessing || !currentRoleConfig.permissions.includes('update_evidence') || !fileName}
+                            className="cyber-button w-full px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold disabled:bg-gray-600 disabled:shadow-none"
+                        >
+                            {isProcessing ? 'Analyzing Evidence...' : '2. Run AI Analysis (Simulate OCR/NLP)'}
+                        </button>
+                        
+                        <p className='text-xs text-gray-500'>*AI analysis uses a mock policy text based on the uploaded file name.</p>
+                        
+                        {!currentRoleConfig.permissions.includes('update_evidence') && (
+                            <p className='text-red-400 text-sm pt-2'>Access Denied: Only ISSM/System Owner can submit evidence.</p>
+                        )}
+                    </div>
                 </div>
             </div>
           </div>
@@ -1314,43 +1570,7 @@ const App = () => {
               </button>
             </div>
 
-            <div className="bg-gray-800 rounded-b-xl shadow-2xl overflow-hidden border border-gray-700">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-700">
-                        <thead className="bg-gray-700">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ID / Control</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Finding</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Severity</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Remediation Action</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Responsible Party</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Due Date</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-700">
-                            {poamList.length === 0 && (
-                                <tr>
-                                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
-                                        No Open POA&M findings. Click "Generate New POA&M Entries" to check current control status.
-                                    </td>
-                                </tr>
-                            )}
-                            {poamList.map((poam) => (
-                                <tr key={poam.id} className="hover:bg-gray-700 transition-colors duration-150">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-400">{poam.controlId}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-300">{poam.finding}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-500">{poam.severity}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-400 max-w-xs">{poam.remediation}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-cyan-300">{poam.responsibleParty}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-300">{poam.dueDate}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-yellow-300">{poam.status}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <PoamTable />
             
             <div className='mt-8 p-6 rounded-xl bg-gray-800 border border-gray-600 shadow-2xl'>
                 <h3 className='text-xl font-semibold mb-3 text-white'>Export & Integration APIs </h3>
@@ -1360,7 +1580,7 @@ const App = () => {
                 <div className='border-t border-b border-gray-700 py-4 mb-4'>
                     <h4 className='text-lg font-medium text-cyan-400 mb-3'>eMASS CSV Data Ingestion Files</h4>
                     <p className='text-sm text-gray-400 mb-4'>
-                        Generates the two primary CSV files required for eMASS import: Controls (SSP) and POA&M.
+                        Generates the two primary CSV files required for eMASS import: Controls (SSP) and POA&M. **(Now aligned with RMF Template fields)**
                     </p>
                     <div className='flex flex-wrap gap-4'>
                         <button
