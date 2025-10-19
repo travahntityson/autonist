@@ -16,3 +16,4 @@ if __name__ == "__main__":
     # Simple test when running standalone
     test_data = b"AutoNIST Test"
     print("Hash:", fips_hash(test_data))
+
