@@ -1,0 +1,33 @@
+name: AutoNIST Core CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+    - name: Lint & security scan
+      run: |
+        pip install bandit safety
+        bandit -r src || true
+        safety check || true
+
+    - name: Build Docker image
+      run: docker build -t autonist-core .
+
+    - name: Push image to registry
+      run: echo "Ready for container registry push (manual configuration required)"
