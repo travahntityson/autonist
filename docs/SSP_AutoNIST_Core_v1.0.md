@@ -3428,14 +3428,14 @@ The objective is to ensure the confidentiality, integrity, and purpose-limitatio
 
 ### K.1 Privacy Governance Structure
 
-```mermaid
 graph TD
-    A[Privacy Officer (PO)] --> B[Data Protection Program]
-    B --> C[Privacy Risk Assessments]
-    B --> D[Privacy Impact Assessment (PIA)]
-    D --> E[System Owners]
-    B --> F[Training & Awareness]
-    B --> G[Incident Response / Breach Handling]
+    A["Privacy Officer (PO)"] --> B["Data Protection Program"]
+    B --> C["Privacy Risk Assessments"]
+    B --> D["Privacy Impact Assessment (PIA)"]
+    D --> E["System Owners"]
+    B --> F["Training and Awareness"]
+    B --> G["Incident Response / Breach Handling"]
+
 Key Roles
 
 Role	Responsibilities
