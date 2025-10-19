@@ -3363,19 +3363,21 @@ J.3 OSCAL JSON Risk Artifact Example
 }
 J.4 Continuous Authorization Workflow
 sequenceDiagram
-    participant CM as Continuous Monitor
-    participant RS as Risk Scoring Service
-    participant AO as Authorizing Official
-    participant DB as OSCAL Risk DB
-    participant PO as POA&M System
+    participant CM as "Continuous Monitor"
+    participant RS as "Risk Scoring Service"
+    participant AO as "Authorizing Official"
+    participant DB as "OSCAL Risk Database"
+    participant PO as "POA&M System"
 
-    CM->>RS: Send new evidence / control status
-    RS->>DB: Write risk artifact (JSON)
-    DB->>AO: Trigger review notification
-    AO->>PO: Approve or create mitigation task
-    PO->>DB: Update status / closure
-    DB->>RS: Refresh risk score
-    RS->>CM: Confirm authorization state
+    CM->>RS: "Send new evidence / control status"
+    RS->>DB: "Write risk artifact (JSON)"
+    DB->>AO: "Trigger review notification"
+    AO->>PO: "Approve or create mitigation task"
+    PO->>DB: "Update status or closure"
+    DB->>RS: "Refresh risk score"
+    RS->>CM: "Confirm authorization state"
+
+
 J.5 Dynamic ATO Decision Matrix
 Condition	Authorization Status	AO Action	System Response
 All controls ≥ 90 % compliant and no Critical risks	Active	Maintain ATO	Standard monitoring
