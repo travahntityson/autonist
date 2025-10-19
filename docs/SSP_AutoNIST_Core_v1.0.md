@@ -3028,12 +3028,12 @@ Recurrence Rate (Post-Remediation)	≤ 2 %	IR Database
 Lessons Learned Closed in POA&M	100 % within 30 days	Risk Dashboard
 G.8 Post-Incident Analysis and Lessons Learned Workflow
 flowchart TD
-    A[Incident Closed] --> B[Root Cause Analysis (RCA)]
-    B --> C[Action Items Defined]
-    C --> D[POA&M Entry Created]
-    D --> E[Mitigation Implemented]
-    E --> F[AO / ISSO Review]
-    F --> G[Continuous Monitoring Verification]
+    A["Incident Closed"] --> B["Root Cause Analysis (RCA)"]
+    B --> C["Action Items Defined"]
+    C --> D["POA&M Entry Created"]
+    D --> E["Mitigation Implemented"]
+    E --> F["AO / ISSO Review"]
+    F --> G["Continuous Monitoring Verification"]
 Outputs Generated
 
 Updated POA&M entries
