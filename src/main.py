@@ -22,4 +22,3 @@ def read_root():
         "status": "AutoNIST Core API running",
         "time": datetime.utcnow().isoformat() + "Z"
     }
-1
