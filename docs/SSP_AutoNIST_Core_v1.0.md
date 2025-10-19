@@ -3270,15 +3270,15 @@ This framework enables dynamic, data-driven authorization decisions rather than 
 
 ### J.1 Architecture Overview
 
-```mermaid
 flowchart TD
-    A[CCM Engine – Evidence Collectors] --> B[Risk Scoring Service]
-    B --> C[Risk Database (JSON / OSCAL Artifacts)]
-    C --> D[Authorization Dashboard]
-    D --> E[AO / ISSO Portal]
-    D --> F[POA&M Manager]
-    F --> G[Continuous Monitoring Metrics]
-    G --> B -- Feedback Loop --> B
+    A["CCM Engine – Evidence Collectors"] --> B["Risk Scoring Service"]
+    B --> C["Risk Database (JSON / OSCAL Artifacts)"]
+    C --> D["Authorization Dashboard"]
+    D --> E["AO / ISSO Portal"]
+    D --> F["POA&M Manager"]
+    F --> G["Continuous Monitoring Metrics"]
+    G --> B
+
 Workflow Summary
 
 Evidence collected from CCM engine and control monitors
