@@ -309,6 +309,263 @@ AutoNIST Core employs immutable, cryptographically hashed audit logs, automated 
 - **Assessment Method:** *Examine* reports; *Interview* ISSO  
 - **Evidence:** `/reports/audit_summary_YYYY.csv`; `ccm_engine.log`  
 
+## 6  Control Family – Configuration Management (CM)
+
+### Family Summary
+The Configuration Management (CM) family ensures AutoNIST Core maintains the integrity and security of system configurations throughout its lifecycle.  
+Configuration changes are tracked through Git-based version control, peer-reviewed commits, Infrastructure-as-Code (IaC) deployment files, and automated baseline enforcement through container orchestration.
+
+---
+
+### CM-1 – Configuration Management Policy and Procedures
+- **Implementation:**  
+  Documented in `/docs/policies/CM-Policy.md`. Establishes configuration control processes, baseline documentation, and approval procedures for all changes.  
+  Defines responsibilities for configuration managers, developers, and security officers.  
+- **Responsible Role:** Configuration Manager / ISSO  
+- **Assessment Method:** *Examine* CM-Policy; *Interview* CM Lead  
+- **Evidence:** `CM-Policy.md`; change control board (CCB) minutes  
+
+---
+
+### CM-2 – Baseline Configuration (+ Enhancements 1, 2, 3)
+- **Implementation:**  
+  Baseline configurations for containers, APIs, and operating systems are stored in GitHub.  
+  Enhancement (CM-2 (1)): Maintains multiple approved configurations (air-gapped vs. GovCloud).  
+  Enhancement (CM-2 (2)): Changes automatically documented via commit metadata.  
+  Enhancement (CM-2 (3)): Configuration drift detection occurs nightly via SCAP scanning.  
+- **Responsible Role:** DevSecOps Engineer / Configuration Manager  
+- **Assessment Method:** *Examine* Git commit logs; *Test* baseline drift detection  
+- **Evidence:** `Dockerfile`; `docker-compose.yml`; `baseline_scan_results.xml`  
+
+---
+
+### CM-3 – Configuration Change Control (+ Enhancements 1, 2)
+- **Implementation:**  
+  All changes undergo peer review and are tracked in GitHub pull requests.  
+  Enhancement (CM-3 (1)): Requires dual approval for production merges.  
+  Enhancement (CM-3 (2)): Automatic rollback feature allows restoration of previous configurations.  
+- **Responsible Role:** Configuration Manager / System Owner  
+- **Assessment Method:** *Examine* PR logs; *Test* rollback procedure  
+- **Evidence:** `.github/workflows/change_control.yml`; `rollback_script.sh`  
+
+---
+
+### CM-4 – Security Impact Analysis (+ Enhancements 1, 2)
+- **Implementation:**  
+  Every configuration change triggers a security impact analysis via automated scripts that assess affected controls.  
+  Enhancement (CM-4 (1)): Identifies changes affecting cryptographic or privileged modules.  
+  Enhancement (CM-4 (2)): Automatically updates POA&M entries if impact is detected.  
+- **Responsible Role:** DevSecOps / ISSO  
+- **Assessment Method:** *Test* change pipeline; *Examine* analysis logs  
+- **Evidence:** `/src/services/change_analyzer.py`; `impact_report.json`  
+
+---
+
+### CM-5 – Access Restrictions for Change (+ Enhancements 1, 2)
+- **Implementation:**  
+  Only authorized maintainers can approve configuration changes.  
+  Enhancement (CM-5 (1)): Change control operations are logged and hashed.  
+  Enhancement (CM-5 (2)): Privileged access reviewed weekly for least-privilege enforcement.  
+- **Responsible Role:** Configuration Manager / ISSO  
+- **Assessment Method:** *Test* RBAC restrictions; *Examine* change logs  
+- **Evidence:** `.github/branch_protection.json`; audit logs  
+
+---
+
+### CM-6 – Configuration Settings (+ Enhancements 1, 2)
+- **Implementation:**  
+  Configuration parameters defined in secure templates.  
+  Enhancement (CM-6 (1)): Deviations automatically flagged by the CCM Engine.  
+  Enhancement (CM-6 (2)): Default configurations comply with DISA STIG and CIS Benchmarks.  
+- **Responsible Role:** System Administrator / ISSO  
+- **Assessment Method:** *Test* baseline enforcement; *Examine* STIG compliance results  
+- **Evidence:** `/config/settings.yaml`; `stig_scan_output.xml`  
+
+---
+
+### CM-7 – Least Functionality (+ Enhancements 1, 2)
+- **Implementation:**  
+  Only essential services are enabled in production containers.  
+  Enhancement (CM-7 (1)): Regular reviews verify no unused ports, packages, or APIs.  
+  Enhancement (CM-7 (2)): Security-hardened base images enforce minimal privileges.  
+- **Responsible Role:** System Administrator / DevSecOps  
+- **Assessment Method:** *Test* service restrictions; *Examine* container build logs  
+- **Evidence:** `Dockerfile`; container audit report  
+
+---
+
+### CM-8 – System Component Inventory (+ Enhancements 1, 2, 3)
+- **Implementation:**  
+  The system maintains a dynamic inventory of software components, versions, and configurations.  
+  Enhancement (CM-8 (1)): Components automatically discovered via LSA Agent.  
+  Enhancement (CM-8 (2)): Components mapped to corresponding security controls.  
+  Enhancement (CM-8 (3)): Inventory validated weekly via API call to baseline repository.  
+- **Responsible Role:** Configuration Manager / DevSecOps  
+- **Assessment Method:** *Test* inventory API; *Examine* inventory report  
+- **Evidence:** `src/api/lsa_agent.py`; `component_inventory.json`  
+
+---
+
+### CM-9 – Configuration Management Plan
+- **Implementation:**  
+  A detailed Configuration Management Plan (CMP) documents configuration items, versioning, roles, and approval authorities.  
+  Updated with every significant architecture or code change.  
+- **Responsible Role:** Configuration Manager / System Owner  
+- **Assessment Method:** *Examine* CMP; *Interview* CM Lead  
+- **Evidence:** `/docs/CM_Plan.md`  
+
+---
+
+### CM-10 – Software Usage Restrictions
+- **Implementation:**  
+  All open-source libraries are vetted against the approved components list.  
+  SBOM scanning via dependency-check ensures license and version compliance.  
+- **Responsible Role:** DevSecOps Engineer  
+- **Assessment Method:** *Test* SBOM validation; *Examine* scan reports  
+- **Evidence:** `sbom_report.xml`; `requirements.txt`  
+
+---
+
+### CM-11 – User-Installed Software
+- **Implementation:**  
+  Users cannot install unapproved software within the system boundary.  
+  Developer containers rebuilt nightly to remove unauthorized additions.  
+- **Responsible Role:** ISSO / System Administrator  
+- **Assessment Method:** *Test* container baseline rebuild; *Interview* admin  
+- **Evidence:** Container rebuild logs; baseline integrity hashes  
+
+---
+
+### Configuration Management Family Assessment Summary
+| Control Count | Fully Implemented | Partially | Inherited | Not Applicable |
+| :-- | :--: | :--: | :--: | :--: |
+| 11 | 9 | 2 | 0 | 0 |
+
+**Residual Risk:** Low – additional IaC validation in progress.  
+**Next Milestones:** Complete automated baseline documentation in OSCAL; integrate dynamic SBOM updates into continuous monitoring workflow.
+
+## 7  Control Family – Contingency Planning (CP)
+
+### Family Summary
+The Contingency Planning (CP) family ensures AutoNIST Core can continue essential operations in the event of disruptions, disasters, or cyber incidents.  
+The system includes automated backup, recovery, redundancy, and reconstitution mechanisms tested regularly in both the air-gapped and cloud-based environments.
+
+---
+
+### CP-1 – Contingency Planning Policy and Procedures
+- **Implementation:**  
+  Documented in `/docs/policies/CP-Policy.md`. Defines contingency objectives, responsibilities, recovery strategies, and testing frequency.  
+  Policy mandates semi-annual plan reviews and post-incident updates.  
+- **Responsible Role:** System Owner / ISSO  
+- **Assessment Method:** *Examine* CP-Policy; *Interview* ISSO  
+- **Evidence:** `CP-Policy.md`  
+
+---
+
+### CP-2 – Contingency Plan (+ Enhancements 1, 2)
+- **Implementation:**  
+  The Contingency Plan (CP) outlines step-by-step recovery procedures, prioritization of critical services, and restoration order.  
+  Enhancement (CP-2 (1)): Includes contact lists, escalation matrix, and vendor dependencies.  
+  Enhancement (CP-2 (2)): Reviewed annually or after significant system change.  
+- **Responsible Role:** System Owner / Recovery Manager  
+- **Assessment Method:** *Examine* CP document; *Interview* recovery team  
+- **Evidence:** `/docs/Contingency_Plan.md`  
+
+---
+
+### CP-3 – Contingency Training
+- **Implementation:**  
+  All personnel with contingency responsibilities receive annual training and participate in recovery exercises.  
+  Training records tracked through the Evidence Store.  
+- **Responsible Role:** ISSO / HR  
+- **Assessment Method:** *Examine* training logs; *Interview* staff  
+- **Evidence:** `evidence/training_records.json`  
+
+---
+
+### CP-4 – Contingency Plan Testing (+ Enhancements 1, 2)
+- **Implementation:**  
+  Annual functional and simulation tests validate backup integrity and restoration procedures.  
+  Enhancement (CP-4 (1)): Exercises coordinated with IR and COOP teams.  
+  Enhancement (CP-4 (2)): Corrective actions captured as POA&M entries.  
+- **Responsible Role:** ISSO / Recovery Manager  
+- **Assessment Method:** *Test* restore drill; *Examine* after-action report  
+- **Evidence:** `/reports/restore_test_YYYY.pdf`; POA&M entries  
+
+---
+
+### CP-6 – Alternate Storage Site (+ Enhancements 1, 2)
+- **Implementation:**  
+  Backups stored at encrypted off-site or cloud-based locations compliant with FedRAMP High.  
+  Enhancement (CP-6 (1)): Geographic separation ≥ 200 miles from primary site.  
+  Enhancement (CP-6 (2)): Replication verified quarterly.  
+- **Responsible Role:** Storage Admin / ISSO  
+- **Assessment Method:** *Test* data replication; *Examine* storage logs  
+- **Evidence:** `backup_replication_report.json`  
+
+---
+
+### CP-7 – Alternate Processing Site (+ Enhancements 1, 2)
+- **Implementation:**  
+  Secondary environment maintained for fail-over operations within approved enclave or GovCloud region.  
+  Enhancement (CP-7 (1)): Replication enabled for core services and databases.  
+  Enhancement (CP-7 (2)): Recovery time objective (RTO) ≤ 4 hours.  
+- **Responsible Role:** System Owner / DevSecOps  
+- **Assessment Method:** *Test* fail-over; *Examine* configuration settings  
+- **Evidence:** `docker-compose-backup.yml`; recovery simulation logs  
+
+---
+
+### CP-8 – Telecommunications Services
+- **Implementation:**  
+  Alternate secure communication paths (VPN, satellite, or GovCloud interlink) established for recovery coordination.  
+  All traffic encrypted (TLS 1.3 or IPsec).  
+- **Responsible Role:** Network Engineer  
+- **Assessment Method:** *Test* alternate link; *Interview* network admin  
+- **Evidence:** `/config/vpn_backup.conf`  
+
+---
+
+### CP-9 – System Backup (+ Enhancements 1, 2)
+- **Implementation:**  
+  Encrypted full system backups performed nightly; incremental backups hourly for databases.  
+  Enhancement (CP-9 (1)): Backup integrity verified using hash validation.  
+  Enhancement (CP-9 (2)): Offline copies retained for 30 days minimum.  
+- **Responsible Role:** System Administrator / Storage Admin  
+- **Assessment Method:** *Test* restore process; *Examine* backup logs  
+- **Evidence:** `backup_schedule.yml`; `integrity_validation.log`  
+
+---
+
+### CP-10 – System Recovery and Reconstitution
+- **Implementation:**  
+  AutoNIST Core includes a documented reconstitution plan allowing full redeployment from source control.  
+  Docker Compose and IaC templates restore services within defined RTO/RPO.  
+  Recovery testing performed quarterly.  
+- **Responsible Role:** DevSecOps / ISSO  
+- **Assessment Method:** *Test* reconstitution procedure; *Examine* IaC templates  
+- **Evidence:** `docker-compose.yml`; `restore_instructions.md`  
+
+---
+
+### CP-11 – Alternate Communications Protocols (Organizational Enhancement)
+- **Implementation:**  
+  Secure messaging (Signal, encrypted email) available when primary comms are offline.  
+  Used during emergency coordination between enclaves.  
+- **Responsible Role:** System Owner / Comms Officer  
+- **Assessment Method:** *Interview* contingency team; *Examine* protocol usage records  
+- **Evidence:** `emergency_comms_plan.md`  
+
+---
+
+### Contingency Planning Family Assessment Summary
+| Control Count | Fully Implemented | Partially | Inherited | Not Applicable |
+| :-- | :--: | :--: | :--: | :--: |
+| 10 | 8 | 2 | 0 | 0 |
+
+**Residual Risk:** Low – additional automation of off-site verification in progress.  
+**Next Milestones:** Integrate backup validation metrics into ConMon dashboard; finalize COOP alignment with organizational continuity plan.
+
 ---
 
 ### AU-7 – Audit Reduction and Report Generation (+ Enhancements 1)
@@ -481,3 +738,135 @@ AutoNIST Core automates major portions of the RMF process—control evidence col
 
 **Residual Risk:** Low – minor enhancement testing pending.  
 **Next Milestones:** Automate 3PAO evidence export; finalize continuous monitoring dashboard reporting schedule.
+
+## 8  Control Family – Identification and Authentication (IA)
+
+### Family Summary
+The Identification and Authentication (IA) family ensures that AutoNIST Core verifies user and system identities before granting access.  
+Authentication is enforced through role-based access tokens, multi-factor authentication (MFA), and cryptographically protected credentials.  
+In the air-gapped deployment, local CAC/PIV credentials are used; in the cloud deployment, SAML, OpenID Connect (OIDC), or SCIM integration provides federated identity management.
+
+---
+
+### IA-1 – Identification and Authentication Policy and Procedures
+- **Implementation:**  
+  Documented in `/docs/policies/IA-Policy.md`. Defines account creation, authentication, MFA enforcement, and credential management requirements.  
+  Procedures describe how tokens, certificates, and passwords are issued, rotated, and revoked.  
+- **Responsible Role:** ISSO / System Owner  
+- **Assessment Method:** *Examine* IA-Policy; *Interview* ISSO  
+- **Evidence:** `IA-Policy.md`  
+
+---
+
+### IA-2 – Identification and Authentication (Organizational Users) (+ Enhancements 1–12)
+- **Implementation:**  
+  All users must authenticate before accessing system resources.  
+  - (IA-2): Enforced through FastAPI JWT-based authentication middleware.  
+  - (IA-2 (1)): MFA (TOTP or CAC) required for privileged users.  
+  - (IA-2 (2)): Non-privileged users use username/password + token.  
+  - (IA-2 (3)): Unique identifiers assigned to every account.  
+  - (IA-2 (4)): Admin logins restricted to secure networks.  
+  - (IA-2 (5)): Authentication re-prompt every 12 hours.  
+  - (IA-2 (6)): MFA enforced across remote sessions.  
+  - (IA-2 (11)): Replay and token-reuse detection implemented.  
+  - (IA-2 (12)): MFA logs stored for 18 months.  
+- **Responsible Role:** System Administrator / DevSecOps  
+- **Assessment Method:** *Test* authentication workflow; *Examine* logs  
+- **Evidence:** `auth_middleware.py`; `data/audit/login_records.json`  
+
+---
+
+### IA-3 – Device Identification and Authentication (+ Enhancements 1, 2)
+- **Implementation:**  
+  LSA Agents register with unique API keys and certificate fingerprints.  
+  Enhancement (IA-3 (1)): Mutual TLS validation required for all device connections.  
+  Enhancement (IA-3 (2)): Devices with revoked certificates denied network access.  
+- **Responsible Role:** Network Engineer / DevSecOps  
+- **Assessment Method:** *Test* certificate authentication; *Examine* agent registration logs  
+- **Evidence:** `src/api/lsa_agent.py`; `/config/cert_store/`  
+
+---
+
+### IA-4 – Identifier Management (+ Enhancements 1, 2)
+- **Implementation:**  
+  User identifiers issued, retired, and re-assigned under documented procedures.  
+  Enhancement (IA-4 (1)): No reuse of unique identifiers for 24 months.  
+  Enhancement (IA-4 (2)): HR offboarding triggers automatic ID deactivation.  
+- **Responsible Role:** HR / ISSO  
+- **Assessment Method:** *Examine* HR procedures; *Test* automated offboarding script  
+- **Evidence:** `user_deprovision.yml`; HR feed logs  
+
+---
+
+### IA-5 – Authenticator Management (+ Enhancements 1–11)
+- **Implementation:**  
+  Passwords and tokens meet FedRAMP High entropy standards (min 15 chars, 2 factors).  
+  - (IA-5 (1)): Passwords hashed with Argon2 and salted.  
+  - (IA-5 (2)): MFA keys stored using HSM-protected vault.  
+  - (IA-5 (4)): MFA reset requires out-of-band verification.  
+  - (IA-5 (6)): Tokens expire after 24 hours.  
+  - (IA-5 (7)): Password reuse prohibited for 12 generations.  
+  - (IA-5 (11)): Private keys validated before use.  
+- **Responsible Role:** ISSO / DevSecOps  
+- **Assessment Method:** *Test* password reset; *Examine* HSM config  
+- **Evidence:** `src/services/crypto.py`; `/config/hsm_vault.json`  
+
+---
+
+### IA-6 – Authenticator Feedback
+- **Implementation:**  
+  Login pages never reveal which credential failed.  
+  Generic error messages prevent username enumeration.  
+- **Responsible Role:** DevSecOps Engineer  
+- **Assessment Method:** *Test* login attempts; *Examine* code logic  
+- **Evidence:** `auth_middleware.py`  
+
+---
+
+### IA-7 – Cryptographic Module Authentication
+- **Implementation:**  
+  Crypto functions use FIPS 140-3 validated libraries (OpenSSL FIPS Module 3.0).  
+  Tokens cryptographically bound to session certificates.  
+- **Responsible Role:** DevSecOps / ISSO  
+- **Assessment Method:** *Examine* cryptographic module configuration  
+- **Evidence:** `/src/services/crypto.py`; FIPS validation certificate reference  
+
+---
+
+### IA-8 – Identification and Authentication (Non-Organizational Users)
+- **Implementation:**  
+  External users (e.g., assessors, contractors) authenticate via federation with customer IdP (SAML/OIDC).  
+  Roles limited to “Read-Only” or “Assessor.”  
+- **Responsible Role:** AO / ISSO  
+- **Assessment Method:** *Test* external IdP login; *Examine* federation configuration  
+- **Evidence:** `/config/sso_config.yaml`  
+
+---
+
+### IA-9 – Service Identification and Authentication
+- **Implementation:**  
+  Inter-service authentication between CCM Engine, Evidence Store, and API Gateway uses service account tokens signed with RSA-4096 keys.  
+- **Responsible Role:** DevSecOps Engineer  
+- **Assessment Method:** *Test* token verification; *Examine* inter-service config  
+- **Evidence:** `service_auth_tokens.json`; `src/api/gateway.py`  
+
+---
+
+### IA-10 – Adaptive Identification and Authentication (Organizational Enhancement)
+- **Implementation:**  
+  Adaptive authentication increases security requirements for high-risk actions (e.g., POA&M edits, evidence deletion).  
+  MFA challenge triggered when anomalous behavior detected by the CCM Engine.  
+- **Responsible Role:** ISSO / Security Analyst  
+- **Assessment Method:** *Test* adaptive trigger; *Examine* monitoring config  
+- **Evidence:** `src/services/ccm_engine.py`; `auth_policy_rules.yaml`  
+
+---
+
+### Identification and Authentication Family Assessment Summary
+| Control Count | Fully Implemented | Partially | Inherited | Not Applicable |
+| :-- | :--: | :--: | :--: | :--: |
+| 10 | 8 | 2 | 0 | 0 |
+
+**Residual Risk:** Low – CAC/PIV integration automation in progress.  
+**Next Milestones:** Implement FIDO2 WebAuthn support; finalize adaptive MFA rollout for privileged access.
+
