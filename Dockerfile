@@ -23,3 +23,11 @@ EXPOSE 8080
 
 # Run the API
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
+
+# Add before final CMD
+RUN adduser --disabled-password --gecos "" autonist \
+ && chown -R autonist /app
+USER autonist
+
+# Enforce read-only filesystem and drop privileges
+# (Done at runtime using Compose or Kubernetes)
