@@ -3570,12 +3570,12 @@ All findings are logged in the POA&M with unique IDs and timestamps for traceabi
 
 ### L.3 Risk Category Distribution
 
-```mermaid
 pie showData
     "Critical (≥16)" : 3
     "High (11–15)" : 5
     "Moderate (6–10)" : 12
     "Low (1–5)" : 302
+
 Interpretation:
 
 Critical Risks: Require immediate mitigation and AO visibility.
