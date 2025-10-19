@@ -39,3 +39,4 @@ class AuditLog(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="audit_logs")
+1
