@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  autonist-core:
+    build: .
+    container_name: autonist-core
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTONIST_ENV=production
+    volumes:
+      - ./data:/app/data
+    restart: always
+
+  db:
+    image: postgres:16-alpine
+    container_name: autonist-db
+    environment:
+      POSTGRES_USER: autonist
+      POSTGRES_PASSWORD: SecureP@ss123!
+      POSTGRES_DB: autonist_core
+    volumes:
+      - autonist_db_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  autonist_db_data:
