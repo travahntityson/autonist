@@ -2877,7 +2877,9 @@ Zone	Description	Key Controls
 3	Data Storage	SC-13, SC-28
 4	External Interfaces	CA-3, SC-8
 5	Infrastructure / Host	PE-3, CM-6
+
 Appendix E – RMF Control Implementation Responsibility Matrix
+
 Control Family	AO	ISSO	ISSM	CISO	SysO	DevSecOps	Assessor	Risk Officer	Privacy	FSO
 AC – Access Control	A	R	C	I	C	R	C	I	I	–
 AU – Audit & Accountability	I	R	C	I	C	R	C	I	–	–
