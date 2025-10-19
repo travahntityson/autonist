@@ -3170,14 +3170,14 @@ It supports continuous risk reduction through proactive scanning, alerting, and 
 
 ### I.2 Integrity Monitoring Architecture
 
-```mermaid
 flowchart TD
-    A[Host / Container Agents] --> B[Integrity Monitor]
-    B --> C[Hash Baseline DB]
-    B --> D[SIEM / SOAR]
-    D --> E[Alerting and Ticketing]
-    C --> F[Baseline Verification Engine]
-    F --> G[CCM Evidence Store]
+    A["Host and Container Agents"] --> B["Integrity Monitor"]
+    B --> C["Hash Baseline Database"]
+    B --> D["SIEM / SOAR"]
+    D --> E["Alerting and Ticketing"]
+    C --> F["Baseline Verification Engine"]
+    F --> G["CCM Evidence Store"]
+
 
 Components
 
