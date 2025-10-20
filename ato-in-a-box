@@ -1,103 +1,1334 @@
-// --- NIST SP 800-53 REV 5 CONTROL CATALOG DATA GENERATOR ---
-// This file dynamically generates the full RMF scope (1189 Controls / 3200 Assessments)
-// for the application's startup state, ensuring architectural compliance.
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+// Import the dynamic data generation function from the separate file
+import { createFullControlCatalog, CONTROL_FAMILIES_CODES } from './nist_control_data.js';
 
-const CONTROL_FAMILIES_CODES = [
-    'AC', 'AT', 'AU', 'CA', 'CM', 'CP', 'IA', 'IR', 'MA', 
-    'MP', 'PE', 'PM', 'PS', 'RA', 'SC', 'SI', 'SA', 'SR',
-    'PL', 'PT'
-];
+// --- 1. MOCK DATA & CONFIGURATION ---
 
-// Base structure and logic controls used for functional demonstration (e.g., AC-3, CM-6)
-const FUNCTIONAL_CONTROLS = [
-    { id: 'AC-3', family: 'AC', title: 'Access Enforcement (ZTA)', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'Access is enforced using network segmentation and MFA. Not fully Zero Trust yet.', artifacts: ['RBAC Matrix v1.0'], inheritance: 'System Specific' },
-    { id: 'AC-6', family: 'AC', title: 'Least Privilege', status: 'Not Implemented', required: true, severity: 'Moderate', procedure: 'Periodic review of user permissions is planned but not executed.', artifacts: [], inheritance: 'System Specific' },
-    { id: 'CM-6', family: 'CM', title: 'Configuration Settings', status: 'Not Implemented', required: true, severity: 'High', procedure: 'Continuous monitoring for drift from the baseline is not yet implemented.', artifacts: [], inheritance: 'System Specific' },
-    { id: 'AT-2', family: 'AT', title: 'Security Awareness Training', status: 'Partially Implemented', required: true, severity: 'Low', procedure: 'Annual security training is required, but tracking completion in the LMS is inconsistent.', artifacts: [], inheritance: 'Inherited' },
-    { id: 'IR-4', family: 'IR', title: 'Incident Handling', status: 'Partially Implemented', required: true, severity: 'Moderate', procedure: 'The Incident Response Plan (IRP) is approved, but automated containment measures are pending implementation.', artifacts: ['IR Plan v3.0'], inheritance: 'System Specific' },
-    { id: 'PE-2', family: 'PE', title: 'Physical Access Authorizations', status: 'Implemented', required: true, severity: 'Low', procedure: 'Access is controlled by badges and documented in the access control system.', artifacts: ['Access Badge Policy'], inheritance: 'Inherited' },
-    { id: 'SR-4', family: 'SR', title: 'Supply Chain Protection', status: 'Partially Implemented', required: true, severity: 'High', procedure: 'We utilize vetted suppliers, but formal, periodic auditing of vendor facilities is not performed.', artifacts: [], inheritance: 'System Specific' },
-];
+// Defining the roles for RBAC simulation
+const ROLES = {
+  AO: { name: 'Authorization Official', color: 'bg-red-500/20 text-red-600 border-red-500', permissions: ['view_all', 'authorize'] },
+  ISSM: { name: 'ISSM / Auditor', color: 'bg-blue-500/20 text-blue-600 border-blue-500', permissions: ['view_all', 'edit_controls', 'approve_poam', 'update_evidence'] },
+  SO: { name: 'System Owner', color: 'bg-green-500/20 text-green-600 border-green-500', permissions: ['view_controls', 'update_evidence'] },
+};
 
-// Target counts
-const TOTAL_CONTROL_ENTRIES = 1189;
-const TOTAL_ASSESSMENTS = 3200;
-const FUNCTIONAL_CONTROL_COUNT = FUNCTIONAL_CONTROLS.length;
-const PLACEHOLDER_CONTROL_COUNT = TOTAL_CONTROL_ENTRIES - FUNCTIONAL_CONTROL_COUNT;
+// All 20 NIST Control Families (NIST SP 800-53 Rev. 5 Core Set)
+const CONTROL_FAMILIES = {
+    'AC': 'Access Control', 'AT': 'Awareness and Training', 'AU': 'Audit and Accountability',
+    'CA': 'Security Assessment and Authorization', 'CM': 'Configuration Management', 'CP': 'Contingency Planning',
+    'IA': 'Identification and Authentication', 'IR': 'Incident Response', 'MA': 'Maintenance',
+    'MP': 'Media Protection', 'PE': 'Physical and Environmental Protection', 'PM': 'Program Management',
+    'PS': 'Personnel Security', 'RA': 'Risk Assessment', 'SC': 'System and Communications Protection', 
+    'SI': 'System and Information Integrity', 'SA': 'System and Services Acquisition', 'SR': 'Supply Chain Risk Management',
+    'PL': 'Planning', 'PT': 'Privacy'
+};
 
-// Generator Function
-export function createFullControlCatalog() {
-    let controls = [...FUNCTIONAL_CONTROLS];
-    let assessments = [];
-    let controlCounter = 0;
+const CONTROL_STATUSES = ['Implemented', 'Partially Implemented', 'Not Implemented', 'Not Applicable'];
 
-    // Map existing functional controls to their IDs for lookups
-    const existingControlIds = new Set(FUNCTIONAL_CONTROLS.map(c => c.id));
-    const familyIndexMap = {}; // To track which control number we are on per family
+// --- 2. MAIN APPLICATION COMPONENT ---
 
-    // 1. Generate Placeholder Controls to meet the 1189 target
-    for (let i = 0; i < PLACEHOLDER_CONTROL_COUNT; i++) {
-        const familyCode = CONTROL_FAMILIES_CODES[i % CONTROL_FAMILIES_CODES.length];
-        
-        if (!familyIndexMap[familyCode]) {
-            familyIndexMap[familyCode] = 1;
-        }
+const App = () => {
+  // Dynamic initialization of controls and assessments from the generator function
+  const { initialControls, initialAssessments } = useMemo(() => createFullControlCatalog(), []);
 
-        let controlId;
-        let isEnhancement = false;
-        
-        // Randomly decide if this is a base control or enhancement, prioritizing base controls first
-        if (familyIndexMap[familyCode] <= 15) { // Prioritize base controls up to 15 per family
-             controlId = `${familyCode}-${familyIndexMap[familyCode].toString().padStart(2, '0')}`;
-        } else {
-             controlId = `${familyCode}-${(familyIndexMap[familyCode] - 15).toString().padStart(2, '0')}(${(i % 3) + 1})`;
-             isEnhancement = true;
-        }
-        
-        familyIndexMap[familyCode]++;
+  const [controls, setControls] = useState(initialControls);
+  const [poamList, setPoamList] = useState([]);
+  const [riskRegister] = useState([]); // Risk Register will be populated by POA&M High findings
+  const [auditLog, setAuditLog] = useState([
+    { timestamp: new Date().toLocaleString(), user: 'System Init', role: 'System', action: 'Application Start', detail: `${initialControls.length} controls and ${initialAssessments.length} assessments loaded.` },
+  ]); 
+  const [currentRole, setCurrentRole] = useState('ISSM');
+  const [activeTab, setActiveTab] = useState('controls'); // Default to controls tab
+  const [fileName, setFileName] = useState(''); 
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [message, setMessage] = useState('');
+  const [atoStatus, setAtoStatus] = useState('Pending Authorization');
+  const [selectedControlId, setSelectedControlId] = useState('');
+  const [localNarrative, setLocalNarrative] = useState({}); // State to hold temporary edits for all controls
+  const [openControlId, setOpenControlId] = useState(''); // State to track which single control editor is open
+  const [assessments] = useState(initialAssessments); // Use initialAssessments
 
-        // Skip if this ID was already defined in the FUNCTIONAL_CONTROLS set
-        if (existingControlIds.has(controlId)) continue;
+  const currentRoleConfig = ROLES[currentRole];
+
+  // Sync manual narrative state with selected control's narrative
+  useEffect(() => {
+    const selectedControl = controls.find(c => c.id === openControlId);
+    if (selectedControl) {
+        setLocalNarrative(prev => ({ ...prev, [openControlId]: selectedControl.procedure }));
+    } else {
+        setLocalNarrative({});
+    }
+  }, [openControlId, controls]);
 
 
-        const newControl = {
-            id: controlId,
-            family: familyCode,
-            title: isEnhancement ? `Placeholder Enhancement ${controlId}` : `Placeholder Control ${controlId}`,
-            status: 'Not Implemented',
-            required: true,
-            severity: (i % 3 === 0) ? 'High' : (i % 3 === 1) ? 'Moderate' : 'Low',
-            procedure: `Placeholder narrative for ${controlId}. Requires official text import.`,
-            artifacts: [],
-            inheritance: 'System Specific'
+  // Helper function to calculate compliance metrics
+  const { total, implemented, complianceScore, readinessLevel, riskPosture } = useMemo(() => {
+    const total = controls.length;
+    const implemented = controls.filter(c => c.status === 'Implemented').length;
+    const partiallyImplemented = controls.filter(c => c.status === 'Partially Implemented').length;
+    const notImplemented = controls.filter(c => c.status === 'Not Implemented').length;
+    const na = controls.filter(c => c.status === 'Not Applicable').length;
+    
+    // Score calculation emphasizes full implementation
+    const complianceScore = Math.round(((implemented + (partiallyImplemented * 0.5)) / (total - na)) * 100) || 0;
+    
+    let readinessLevel = 'Low';
+    if (complianceScore > 85) readinessLevel = 'High';
+    else if (complianceScore > 65) readinessLevel = 'Moderate';
+
+    // Derive Risk Posture from high-severity open POA&Ms
+    let riskPosture = 'Acceptable';
+    const highSeverityPoams = poamList.filter(p => p.status === 'Open' && p.severity === 'High');
+    
+    if (highSeverityPoams.length > 5) {
+        riskPosture = 'Very High Risk';
+    } else if (highSeverityPoams.length > 0) {
+        riskPosture = 'High Risk';
+    } else if (notImplemented > 0) {
+        riskPosture = 'Moderate Risk';
+    }
+
+    return { total, implemented, complianceScore, readinessLevel, riskPosture };
+  }, [controls, poamList]);
+
+  // Handle simulated file upload (extracting filename)
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setFileName(file.name);
+      setMessage({ type: 'info', text: `File "${file.name}" uploaded. Processing via simulated OCR. Click Analyze to run NLP.` });
+    }
+  };
+
+  // --- CORE AUTOMATION FUNCTIONS ---
+
+  // Simulates the LLM/NLP Document Analysis (Automated Documentation Analysis)
+  const handleDocumentUpload = useCallback(() => {
+    if (!fileName) {
+      setMessage({ type: 'error', text: 'Please upload a policy file first.' });
+      return;
+    }
+    // --- MOCK POLICY CONTENT (Simulating OCR Output) ---
+    const mockPolicyContent = `
+        Section 3.1: Access Control. The organization mandates annual security training for all personnel (AT-2) and uses LMS records to verify completion. 
+        Access enforcement is handled by implementing a Zero Trust Architecture (AC-3) across the network boundary. 
+        Furthermore, the least privilege principle (AC-6) is strictly followed via a mandatory quarterly review of user permissions.
+        Section 5.2: Media Protection. All magnetic media is destroyed or wiped according to NSS Manual 4009 (MP-6) standards by the facilities manager.
+        The overall Continuous Monitoring program (CA-7) uses automated tools to check for configuration baseline enforcement (CM-6) every 12 hours.
+        The formal Supply Chain Risk Management (SA-12) plan requires vetting for all COTS components before acquisition.
+    `;
+    const policySentences = mockPolicyContent.split('.').map(s => s.trim()).filter(s => s.length > 1);
+    
+    // --- MOCK CCI CONTINGENCY DATA (Simulating structured scan results) ---
+    const mockCciFindings = [
+        { cci: 'CCI-000200', controlId: 'AC-3', status: 'Pass', artifact: 'NIST STIG Report' },
+        { cci: 'CCI-000343', controlId: 'IR-5', status: 'Fail', artifact: 'ACAS Scan Report' }, // IR-5 will be marked Partially Implemented via CCI
+        { cci: 'CCI-000180', controlId: 'SI-10', status: 'Pass', artifact: 'SAST Tool Report' }, // SI-10 will be marked Implemented via CCI
+    ];
+    const cciToControlMap = new Map(mockCciFindings.map(f => [f.controlId, f]));
+    // --- END MOCK CCI CONTINGENCY DATA ---
+
+
+    if (!currentRoleConfig.permissions.includes('update_evidence')) {
+        setMessage({ type: 'error', text: 'Access Denied: Only ISSM/System Owner can update evidence via this function.' });
+        return;
+    }
+
+    setIsProcessing(true);
+    setMessage({ type: 'info', text: 'AI/NLP Engine performing targeted extraction on uploaded policy text...' });
+
+    // Use a timeout to simulate API latency
+    setTimeout(() => {
+      const newControls = [...controls];
+      let controlsUpdated = 0;
+      const updatedControlIds = [];
+      const timestamp = new Date().toLocaleDateString();
+      const artifactBaseName = fileName;
+
+      // 1. Map of Control IDs to their required keywords (Targeted RAG)
+      const controlKeywords = {
+          'AC-3': { keywords: ['zero trust architecture', 'access enforcement'], procedure: null, updatedBy: null },
+          'AC-6': { keywords: ['least privilege principle', 'periodic review of user permissions'], procedure: null, updatedBy: null },
+          'CM-6': { keywords: ['configuration baseline enforcement', 'automated tools to check for drift'], procedure: null, updatedBy: null },
+          'AT-2': { keywords: ['annual security training', 'lms records'], procedure: null, updatedBy: null },
+          'MP-6': { keywords: ['media is destroyed or wiped', 'nss manual 4009'], procedure: null, updatedBy: null },
+          'SA-12': { keywords: ['supply chain risk management', 'vetting for all cots components'], procedure: null, updatedBy: null },
+          'CA-7': { keywords: ['continuous monitoring program', 'iscm strategy'], procedure: null, updatedBy: null },
+          'IR-5': { keywords: [], procedure: null, updatedBy: null }, // CCI only
+          'SI-10': { keywords: [], procedure: null, updatedBy: null }, // CCI only
+      };
+
+      // 1. STAGE 1: Targeted Text Extraction (RAG)
+      policySentences.forEach(sentence => {
+          const lowerCaseSentence = sentence.toLowerCase();
+          
+          Object.keys(controlKeywords).forEach(controlId => {
+              const controlConfig = controlKeywords[controlId];
+              // Only attempt NLP if control is not yet addressed and has keywords
+              if (!controlConfig.procedure && controlConfig.keywords.length > 0 && controlConfig.keywords.some(keyword => lowerCaseSentence.includes(keyword))) {
+                  controlKeywords[controlId].procedure = sentence.trim() + '.';
+                  controlKeywords[controlId].updatedBy = 'RAG Engine';
+              }
+          });
+      });
+
+      // 2. STAGE 2: CCI Contingency Check for remaining controls
+      Object.keys(controlKeywords).forEach(controlId => {
+          const controlConfig = controlKeywords[controlId];
+          const cciFinding = cciToControlMap.get(controlId);
+          
+          // Check if RAG failed AND control has a CCI finding
+          if (!controlConfig.updatedBy && cciFinding) {
+              const status = cciFinding.status === 'Pass' ? 'Implemented' : 'Partially Implemented';
+              const procedure = `CCI CONTINGENCY: Status auto-set to ${status} via technical finding ${cciFinding.cci}. Artifact: ${cciFinding.artifact}.`;
+
+              controlKeywords[controlId].procedure = procedure;
+              controlKeywords[controlId].updatedBy = `CCI Check (${cciFinding.cci})`;
+          }
+      });
+
+
+      // 3. Update Control Status and Artifacts
+      Object.keys(controlKeywords).forEach(controlId => {
+          const updateSource = controlKeywords[controlId].updatedBy;
+          
+          if (updateSource) {
+              const control = newControls.find(c => c.id === controlId);
+              if (control) {
+                  let status = control.status;
+                  let procedure = controlKeywords[controlId].procedure;
+                  let artifact = `${artifactBaseName} - ${updateSource}`;
+
+                  if (updateSource.startsWith('CCI Check')) {
+                      status = procedure.includes('Implemented') ? 'Implemented' : 'Partially Implemented';
+                      artifact = `${cciToControlMap.get(controlId).artifact}`;
+                      procedure = procedure.replace('CCI CONTINGENCY: ', ''); // Remove internal tag
+                  } else {
+                      status = 'Implemented';
+                  }
+                  
+                  if (control.status !== status || !control.procedure.includes('Automated Engine')) {
+                      control.status = status;
+                      controlsUpdated++;
+                  }
+                  
+                  // Update procedure and artifacts
+                  control.procedure = procedure;
+                  if (!control.artifacts.includes(artifact)) {
+                     control.artifacts.push(artifact);
+                  }
+
+                  updatedControlIds.push(control.id);
+              }
+          }
+      });
+      
+      setControls(newControls);
+
+      // --- Audit Logging Logic ---
+      if (controlsUpdated > 0) {
+        const newLogEntry = {
+          timestamp: new Date().toLocaleString(),
+          user: `${currentRole}: Automated Engine`,
+          role: currentRole,
+          action: 'NLP/CCI Automated Check',
+          detail: `${controlsUpdated} control status(es) updated: [${updatedControlIds.join(', ')}].`,
         };
+        setAuditLog(prevLog => [newLogEntry, ...prevLog]); 
+      }
+      
+      setIsProcessing(false);
+      setMessage({ 
+          type: 'success', 
+          text: `Automated Analysis Complete on "${artifactBaseName}". ${updatedControlIds.length} controls were updated via RAG/CCI: [${updatedControlIds.join(', ')}].` 
+      });
+    }, 2500);
+  }, [controls, fileName, currentRole, currentRoleConfig.permissions]);
 
-        controls.push(newControl);
-        controlCounter++;
+  // Simulates the Continuous Control Monitoring (CCM) Engine (NIST SP 800-137)
+  const runContinuousMonitoring = useCallback(() => {
+    if (!currentRoleConfig.permissions.includes('view_all')) {
+        setMessage({ type: 'error', text: 'Access Denied: Role must have view_all permission to run CCM.' });
+        return;
     }
 
-    // Ensure we have exactly 1189 or close to it (due to skips/overlaps)
-    // In a real system, the input would be precise. Here we enforce the count for the dashboard:
-    if (controls.length !== TOTAL_CONTROL_ENTRIES) {
-        console.warn(`Generated ${controls.length} controls, adjusting dashboard count to ${TOTAL_CONTROL_ENTRIES}.`);
+    setIsProcessing(true);
+    setMessage({ type: 'info', text: 'Initiating Continuous Monitoring Engine... Checking real-time status against authorized baseline.' });
+
+    setTimeout(() => {
+        const newControls = [...controls];
+        let statusUpdates = 0;
+        const timestamp = new Date().toLocaleString();
+
+        // 1. CM-6: Configuration Settings Check (High-Value Check for Drift)
+        const cm6 = newControls.find(c => c.id === 'CM-6');
+        const driftDetected = Math.random() > 0.8; // 20% chance of drift failure
+        
+        if (cm6) {
+          if (driftDetected) {
+              if (cm6.status !== 'Partially Implemented') {
+                  cm6.status = 'Partially Implemented';
+                  cm6.artifacts.push(`CCM Alert: Baseline Drift Detected (${timestamp})`);
+                  statusUpdates++;
+                  cm6.procedure = `CCM UPDATE: Baseline drift detected by monitoring agent. Manual inspection required.`;
+              }
+          } else {
+              if (cm6.status !== 'Implemented') {
+                  cm6.status = 'Implemented';
+                  cm6.artifacts = cm6.artifacts.filter(a => !a.includes('CCM Alert')); 
+                  cm6.artifacts.push(`CCM Report: Baseline Compliance Confirmed (${timestamp})`);
+                  statusUpdates++;
+                  cm6.procedure = `CCM UPDATE: Configuration compliance confirmed by monitoring agent. No drift detected.`;
+              }
+          }
+        }
+
+        // 2. IR-4: Incident Handling (Testing for active SIEM/Ticketing integration)
+        const ir4 = newControls.find(c => c.id === 'IR-4');
+        const activeMonitoring = Math.random() > 0.1; // 90% chance of passing
+        
+        if (ir4) {
+          if (activeMonitoring) {
+              if (ir4.status !== 'Implemented') {
+                  ir4.status = 'Implemented';
+                  ir4.artifacts.push(`CCM Report: SIEM/Ticketing Integration Confirmed Active (${timestamp})`);
+                  statusUpdates++;
+                  ir4.procedure = `CCM UPDATE: Active monitoring and SIEM integration verified. Automated containment working.`;
+              }
+          } else {
+              if (ir4.status !== 'Partially Implemented') {
+                  ir4.status = 'Partially Implemented';
+                  ir4.artifacts.push(`CCM Alert: SIEM Integration Failed/Inactive (${timestamp})`);
+                  statusUpdates++;
+                  ir4.procedure = `CCM UPDATE: SIEM feed connectivity test failed. Manual check required.`;
+              }
+          }
+        }
+
+        // 3. AU-6: Audit Review, Analysis, and Reporting check
+        const au6 = newControls.find(c => c.id === 'AU-6');
+        const reportingSuccess = Math.random() > 0.2; // 80% chance of success
+        if (au6) {
+          if (reportingSuccess) {
+            if (au6.status !== 'Implemented') {
+              au6.status = 'Implemented';
+              au6.artifacts.push(`CCM Report: Daily Audit Report Generation Confirmed (${timestamp})`);
+              statusUpdates++;
+              au6.procedure = `CCM UPDATE: Daily audit report generation service is operational.`;
+            }
+          } else {
+            if (au6.status !== 'Partially Implemented') {
+              au6.status = 'Partially Implemented';
+              au6.artifacts.push(`CCM Alert: Audit Report Failure/Delay Detected (${timestamp})`);
+              statusUpdates++;
+              au6.procedure = `CCM UPDATE: Daily audit report generation service failed. POA&M entry required.`;
+            }
+          }
+        }
+        
+        setControls(newControls);
+
+        // Audit Logging for CCM
+        const newLogEntry = {
+            timestamp: new Date().toLocaleString(),
+            user: `${currentRole}: Automated Engine`,
+            role: 'System',
+            action: 'Continuous Monitoring Run',
+            detail: `CCM completed. ${statusUpdates} control status changes detected.`,
+        };
+        setAuditLog(prevLog => [newLogEntry, ...prevLog]); 
+
+        setIsProcessing(false);
+        setMessage({ type: 'success', text: `CCM Run Complete: ${statusUpdates} control statuses updated based on real-time data feeds. Check Control Review for details.` });
+
+    }, 3000); // Simulate 3 seconds for the comprehensive scan
+  }, [controls, currentRole, currentRoleConfig.permissions]);
+
+
+  // Simulates POA&M Automation (Generate Plan of Action & Milestones)
+  const generatePOAandM = useCallback(() => {
+    if (!currentRoleConfig.permissions.includes('edit_controls')) {
+        setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can generate POA&M entries.' });
+        return;
+    }
+    
+    // Find all controls that are not fully implemented and are not currently in an 'Open' POA&M
+    const deficiencies = controls.filter(c => 
+        c.status !== 'Implemented' && 
+        c.status !== 'Not Applicable' &&
+        !poamList.some(p => p.controlId === c.id && p.status === 'Open')
+    );
+    
+    if (deficiencies.length === 0) {
+      setMessage({ type: 'info', text: 'No new deficiencies found. All current findings are either Implemented or already in the Open POA&M list.' });
+      return;
     }
 
-    // 2. Generate Assessment Objectives to meet the 3200 target
-    for (let i = 0; i < TOTAL_ASSESSMENTS; i++) {
-        const controlIdRef = controls[i % controls.length].id;
-        assessments.push({
-            id: `CA-OBJ-${i + 1}`,
-            control_ref: controlIdRef,
-            objective: `Assessment Objective Placeholder ${i + 1}.`,
-            method: (i % 3 === 0) ? 'TEST' : (i % 3 === 1) ? 'EXAMINE' : 'INTERVIEW',
-        });
-    }
+    const newPoamEntries = deficiencies.map(c => {
+      // POA&M Automation Logic: Determine details based on control metadata
+      let remediationSteps = `Investigate deficiency in ${c.title}.`;
+      let dueDate = new Date();
+      
+      switch (c.severity) {
+        case 'High':
+          dueDate.setDate(dueDate.getDate() + 90); // 90 days for High
+          remediationSteps = `HIGH PRIORITY: Implement system requirements for ${c.id} and document the fix for auditor review.`;
+          break;
+        case 'Moderate':
+          dueDate.setDate(dueDate.getDate() + 180); // 180 days for Moderate
+          break;
+        default:
+          dueDate.setDate(dueDate.getDate() + 365); // 365 days for Low
+      }
 
-
-    return {
-        controls: controls,
-        assessments: assessments,
-        totalControlCount: TOTAL_CONTROL_ENTRIES,
-        totalAssessmentCount: TOTAL_ASSESSMENTS,
+      return {
+        id: crypto.randomUUID(),
+        controlId: c.id,
+        finding: `${c.id} (${c.title}) is currently ${c.status}.`,
+        severity: c.severity,
+        remediation: remediationSteps,
+        responsibleParty: c.family === 'AC' ? 'System Owner' : 'ISSM',
+        dueDate: dueDate.toLocaleDateString(),
+        status: 'Open',
+        creationDate: new Date().toLocaleDateString(),
+      };
+    });
+    
+    setPoamList(prev => [...prev.filter(p => p.status === 'Open'), ...newPoamEntries]);
+    
+    // Log POA&M Generation action
+    const newLogEntry = {
+        timestamp: new Date().toLocaleString(),
+        user: `${currentRole}: Manual Action`,
+        role: currentRole,
+        action: 'POA&M Generation',
+        detail: `Generated new POA&M list. ${newPoamEntries.length} new deficiencies detected.`,
     };
-}
+    setAuditLog(prevLog => [newLogEntry, ...prevLog]);
+
+    setMessage({ type: 'success', text: `POA&M generated successfully. ${newPoamEntries.length} new deficiencies detected and logged.` });
+  }, [controls, poamList, currentRole, currentRoleConfig.permissions]);
+
+  // Handle POA&M closure/mitigation
+  const handlePoamClosure = useCallback((poamId, newStatus) => {
+    if (!currentRoleConfig.permissions.includes('edit_controls')) {
+        setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can close POA&M entries.' });
+        return;
+    }
+
+    let closedPoam;
+    const newPoamList = poamList.map(p => {
+        if (p.id === poamId) {
+            closedPoam = p;
+            return { ...p, status: newStatus, closureDate: new Date().toLocaleDateString() };
+        }
+        return p;
+    });
+
+    if (closedPoam) {
+        setPoamList(newPoamList);
+
+        // Check if the control has any other OPEN POA&Ms.
+        const hasOtherOpenPoams = newPoamList.some(p => p.controlId === closedPoam.controlId && p.status === 'Open');
+
+        // If no other open POA&Ms for this control, update the control status to Implemented.
+        if (!hasOtherOpenPoams && newStatus === 'Closed') {
+            setControls(prevControls => prevControls.map(c => {
+                if (c.id === closedPoam.controlId) {
+                    return { ...c, status: 'Implemented' };
+                }
+                return c;
+            }));
+
+            const newLogEntry = {
+                timestamp: new Date().toLocaleString(),
+                user: 'System: POA&M Sync',
+                role: 'System',
+                action: 'Control Status Sync',
+                detail: `Control ${closedPoam.controlId} synchronized to 'Implemented' as all associated POA&M findings are now Closed.`,
+            };
+            setAuditLog(prevLog => [newLogEntry, ...prevLog]);
+            setMessage(prev => ({ type: 'success', text: `${prev.text} | Control ${closedPoam.controlId} status auto-updated to Implemented.` }));
+        }
+
+        const logAction = newStatus === 'Closed' ? 'POA&M Closed/Mitigated' : 'POA&M Risk Accepted';
+        const newLogEntry = {
+            timestamp: new Date().toLocaleString(),
+            user: `${currentRole}: Manual Action`,
+            role: currentRole,
+            action: logAction,
+            detail: `Finding ${closedPoam.controlId} marked as ${newStatus}. Requires final eMASS update.`,
+        };
+        setAuditLog(prevLog => [newLogEntry, ...prevLog]);
+        
+        setMessage(prev => ({ type: 'success', text: `POA&M finding for ${closedPoam.controlId} marked as ${newStatus}.` }));
+    }
+  }, [poamList, currentRole, currentRoleConfig.permissions]);
+
+  
+  // Function to export POA&M data to eMASS compatible CSV
+  const exportPoamToEmassCsv = useCallback(() => {
+    if (!currentRoleConfig.permissions.includes('edit_controls')) {
+        setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can export POA&M findings.' });
+        return;
+    }
+
+    if (poamList.length === 0) {
+        setMessage({ type: 'info', text: 'Please generate POA&M entries first before exporting the CSV.' });
+        return;
+    }
+
+    // Define eMASS required headers for POA&M upload (simplified set for demo)
+    const headers = [
+      "Control ID",
+      "Finding Description",
+      "Corrective Action Plan",
+      "Status",
+      "Responsible Organization",
+      "Scheduled Completion Date (MM/DD/YYYY)",
+      "Severity (High/Moderate/Low)"
+    ];
+
+    const rows = poamList.map(item => [
+      item.controlId,
+      `Deficiency in ${item.finding}`, // Finding Description
+      item.remediation.replace(/,/g, ''), // Remove commas from text fields to avoid CSV issues
+      item.status, // Use the current status (Open, Closed, Accepted)
+      item.responsibleParty,
+      item.dueDate, // Scheduled Completion Date
+      item.severity
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.join(","))
+    ].join("\n");
+
+    // Create a Blob and initiate download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `eMASS_POAandM_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    // Log Export action
+    const newLogEntry = {
+        timestamp: new Date().toLocaleString(),
+        user: `${currentRole}: Manual Action`,
+        role: currentRole,
+        action: 'eMASS POA&M Export',
+        detail: `Exported ${poamList.length} POA&M findings to eMASS CSV format.`,
+    };
+    setAuditLog(prevLog => [newLogEntry, ...prevLog]);
+
+    setMessage({ type: 'success', text: `POA&M data exported successfully as eMASS-compatible CSV.` });
+  }, [poamList, currentRole, currentRoleConfig.permissions]);
+  
+  // Function to export Security Controls data to eMASS compatible CSV
+  const exportControlsToEmassCsv = useCallback(() => {
+      if (!currentRoleConfig.permissions.includes('edit_controls')) {
+          setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can export control data.' });
+          return;
+      }
+
+      if (controls.length === 0) {
+          setMessage({ type: 'info', text: 'No controls loaded to export.' });
+          return;
+      }
+
+      // Define expanded eMASS required headers based on the RMF Template provided by user
+      const headers = [
+        "Control Acronym",
+        "Control Information", // Used for Title/Description
+        "Control Implementation Status",
+        "Control Implementation Narrative",
+        "AP Acronym", // Assessment Procedure Acronym (Mocked)
+        "CCI",        // Control Correlation Identifier (Mocked)
+        "Date Tested",
+        "Tested By",
+        "Test Results", // Used for supporting artifacts/evidence
+        "Inheritance Status" // NEW: Added Inheritance Status
+      ];
+
+      const dateTested = new Date().toLocaleDateString();
+
+      const rows = controls.map(item => {
+          // Mock Assessment Data based on Control ID structure
+          const apAcronym = item.id.includes('(') ? `${item.id.match(/^[A-Z]{2}-\d+/)[0]} E-MOCK` : `${item.id} E-1`;
+          const cciId = `CCI-${item.id.replace(/[^A-Z0-9]/g, '')}-MOCK`;
+          
+          return [
+              item.id, // Control Acronym
+              `Title: ${item.title}`, // Control Information (Simplified)
+              item.status, // Control Implementation Status
+              // Narrative, enclosed in quotes for multi-line/comma safety
+              `"${item.procedure.replace(/"/g, '""').replace(/\n/g, ' ')}"`, 
+              apAcronym, // AP Acronym (Mocked)
+              cciId, // CCI (Mocked)
+              dateTested, // Date Tested (Mocked)
+              "Automated Engine / ISSM", // Tested By (Mocked)
+              `Evidence Mapped: ${item.artifacts.join('; ').replace(/"/g, '""')}`, // Test Results (Artifacts)
+              item.inheritance // Inheritance Status
+          ];
+      });
+
+      // Combine headers and rows
+      const csvContent = [
+          headers.join(","),
+          ...rows.map(row => row.join(","))
+      ].join("\n");
+
+      // Create a Blob and initiate download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `eMASS_Controls_Export_Aligned_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      // Log Export action
+      const newLogEntry = {
+          timestamp: new Date().toLocaleString(),
+          user: `${currentRole}: Manual Action`,
+          role: currentRole,
+          action: 'eMASS Controls Export (Aligned)',
+          detail: `Exported ${controls.length} Security Controls to ALIGNED eMASS CSV format.`,
+      };
+      setAuditLog(prevLog => [newLogEntry, ...prevLog]);
+
+      setMessage({ type: 'success', text: `Security Control implementation data exported successfully as ALIGNED eMASS-compatible CSV.` });
+  }, [controls, currentRole, currentRoleConfig.permissions]);
+
+  // Handle eMASS Baseline CSV upload (reads and overwrites control data)
+  const handleEmassBaselineUpload = useCallback((event) => {
+    if (!currentRoleConfig.permissions.includes('edit_controls')) {
+        setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can upload baseline data.' });
+        return;
+    }
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        setMessage({ type: 'error', text: 'Invalid file type. Please upload a CSV file compatible with eMASS exports.' });
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const text = e.target.result;
+        // Simplified CSV parsing (assumes headers are in the first row)
+        const lines = text.split('\n').filter(line => line.trim() !== '');
+        if (lines.length < 2) {
+            setMessage({ type: 'error', text: 'CSV is empty or missing data rows.' });
+            return;
+        }
+
+        // Use the first row to determine the header indices
+        const headers = lines[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.trim().replace(/"/g, ''));
+        
+        const controlIdIndex = headers.indexOf('Control Acronym');
+        const statusIndex = headers.indexOf('Control Implementation Status');
+        const narrativeIndex = headers.indexOf('Control Implementation Narrative');
+        const artifactIndex = headers.indexOf('Test Results');
+        const inheritanceIndex = headers.indexOf('Inheritance Status');
+
+        if (controlIdIndex === -1 || statusIndex === -1) {
+             setMessage({ type: 'error', text: 'CSV Headers missing. Must contain "Control Acronym" and "Control Implementation Status".' });
+             return;
+        }
+        
+        const importedControls = lines.slice(1).map(line => {
+            const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.trim().replace(/"/g, '')); 
+            
+            const statusRaw = values[statusIndex] || 'Not Implemented';
+            const status = statusRaw.includes('Implemented') ? 'Implemented' : 
+                           statusRaw.includes('Partial') ? 'Partially Implemented' : 
+                           statusRaw.includes('NA') ? 'Not Applicable' : 'Not Implemented';
+            
+            const inheritance = (inheritanceIndex !== -1 && values[inheritanceIndex].includes('Inherited')) ? 'Inherited' : 'System Specific';
+
+            return {
+                id: values[controlIdIndex],
+                status: status,
+                procedure: (narrativeIndex !== -1 && values[narrativeIndex]) || `Imported SSP narrative from ${file.name}.`,
+                artifacts: (artifactIndex !== -1 && values[artifactIndex]) ? values[artifactIndex].split(';').map(a => a.trim()) : [`Imported from ${file.name}`],
+                inheritance: inheritance
+            };
+        }).filter(c => c.id);
+
+        let updatedCount = 0;
+        const newControlsMap = new Map(controls.map(c => [c.id, c]));
+
+        importedControls.forEach(imported => {
+            if (newControlsMap.has(imported.id)) {
+                const existing = newControlsMap.get(imported.id);
+                // Overwrite the mutable fields
+                newControlsMap.set(imported.id, {
+                    ...existing,
+                    status: imported.status,
+                    procedure: imported.procedure,
+                    artifacts: imported.artifacts,
+                    inheritance: imported.inheritance, // Apply inherited status from baseline
+                });
+                updatedCount++;
+            }
+        });
+        
+        setControls(Array.from(newControlsMap.values()));
+
+        const newLogEntry = {
+            timestamp: new Date().toLocaleString(),
+            user: `${currentRole}: Manual Action`,
+            role: currentRole,
+            action: 'eMASS Baseline Import',
+            detail: `Imported ${updatedCount} controls from external eMASS template: ${file.name}.`,
+        };
+        setAuditLog(prevLog => [newLogEntry, ...prevLog]);
+
+        setMessage({ type: 'success', text: `Baseline import successful! ${updatedCount} controls have been updated using data from ${file.name}.` });
+    };
+    reader.readAsText(file);
+    event.target.value = null; // Reset file input
+  }, [controls, currentRole, currentRoleConfig.permissions]);
+
+
+  // AO Sign-off function (removed for ISSM focus)
+  const handleAtoDecision = (decision) => {
+    // This is mocked purely for the Authorization tab interface
+    const newStatus = decision === 'Approve' ? 'Approved (ATO)' : 'Denied (Risk Unacceptable)';
+    setAtoStatus(newStatus);
+    const newLogEntry = {
+        timestamp: new Date().toLocaleString(),
+        user: `AO: Jane Doe`,
+        role: 'AO',
+        action: 'Authorization Decision',
+        detail: `System ATO Status set to: ${newStatus}.`,
+    };
+    setAuditLog(prevLog => [newLogEntry, ...prevLog]);
+    setMessage({ type: decision === 'Approve' ? 'success' : 'error', text: `Authorization Decision Recorded: ${newStatus}.` });
+  };
+    
+  // Function to handle manual status change via inline editor
+  const handleManualStatusChange = (newStatus, controlId) => {
+    if (!currentRoleConfig.permissions.includes('edit_controls')) {
+        setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can manually override control status.' });
+        return;
+    }
+
+    const idToUpdate = controlId || openControlId;
+    if (!idToUpdate) return;
+
+    const newControls = controls.map(c => {
+        if (c.id === idToUpdate) {
+            // Log the status change
+            const newLogEntry = {
+                timestamp: new Date().toLocaleString(),
+                user: `${currentRole}: Manual Action`,
+                role: currentRole,
+                action: 'Control Status Override',
+                detail: `${c.id} status manually changed from ${c.status} to ${newStatus}.`,
+            };
+            setAuditLog(prevLog => [newLogEntry, ...prevLog]); 
+
+            setMessage({ type: 'success', text: `Status for ${c.id} updated to ${newStatus} and logged to audit trail.` });
+
+            return { ...c, status: newStatus };
+        }
+        return c;
+    });
+    setControls(newControls);
+  };
+
+
+  // Manual Narrative Save Logic
+  const handleSaveNarrative = useCallback((controlId, newNarrative) => {
+    if (!currentRoleConfig.permissions.includes('edit_controls')) {
+        setMessage({ type: 'error', text: 'Access Denied: Only ISSM/Auditor can save the SSP Narrative.' });
+        return;
+    }
+
+    if (!controlId) return;
+
+    const newControls = controls.map(c => {
+        if (c.id === controlId) {
+            // Log the change
+            const newLogEntry = {
+                timestamp: new Date().toLocaleString(),
+                user: `${currentRole}: Manual Action`,
+                role: currentRole,
+                action: 'SSP Narrative Edit',
+                detail: `${c.id} implementation narrative manually updated.`,
+            };
+            setAuditLog(prevLog => [newLogEntry, ...prevLog]); 
+
+            setMessage({ type: 'success', text: `SSP Narrative for ${c.id} saved and logged to audit trail.` });
+
+            return { ...c, procedure: newNarrative }; // Update the procedure field
+        }
+        return c;
+    });
+    setControls(newControls);
+
+    // Close the editor after saving
+    setOpenControlId('');
+    setLocalNarrative({});
+  }, [controls, currentRole, currentRoleConfig.permissions]);
+
+  // Generic Export (OSCAL)
+  const handleExport = (format) => {
+    if (!currentRoleConfig.permissions.includes('view_all')) {
+        setMessage({ type: 'error', text: 'Access Denied: Role must have view_all permission to export ATO package.' });
+        return;
+    }
+
+    const exportData = {
+      metadata: { timestamp: new Date().toISOString(), atoStatus },
+      controls: controls,
+      poam: poamList,
+      assessments: assessments,
+      auditTrail: auditLog,
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ATO_Package_${format}_${new Date().getFullYear()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    const newLogEntry = {
+        timestamp: new Date().toLocaleString(),
+        user: `${currentRole}: Manual Action`,
+        role: currentRole,
+        action: 'ATO Package Export',
+        detail: `Exported full ATO package in ${format} format (OSCAL compliant).`,
+    };
+    setAuditLog(prevLog => [newLogEntry, ...prevLog]);
+
+    setMessage({ type: 'info', text: `Export simulated: ATO package for ${controls.length} controls prepared for ${format} ingestion (OSCAL compliant).` });
+  };
+
+
+  // --- 3. UI COMPONENTS ---
+
+  const MetricCard = ({ title, value, unit = '', className = '' }) => (
+    <div className={`p-6 rounded-xl shadow-xl backdrop-blur-sm bg-white/10 border border-gray-700/50 ${className}`}>
+      <p className="text-sm font-medium text-gray-400 uppercase tracking-widest">{title}</p>
+      <p className="mt-1 text-5xl font-extrabold text-white">
+        {value}
+        <span className="text-2xl font-semibold ml-1 text-gray-300">{unit}</span>
+      </p>
+    </div>
+  );
+
+  const StatusPill = ({ status, severity, size = 'xs', isInherited = false }) => {
+    let colorClass = 'bg-gray-600';
+    let textColor = 'text-white';
+    if (isInherited) { colorClass = 'bg-indigo-600/70'; textColor = 'text-white'; }
+    else if (status === 'Implemented') { colorClass = 'bg-green-600/70'; textColor = 'text-white'; }
+    else if (status === 'Partially Implemented') { colorClass = 'bg-yellow-500/70'; textColor = 'text-black'; }
+    else if (status === 'Not Implemented') { colorClass = 'bg-red-600/70'; textColor = 'text-white'; }
+    else if (status === 'Not Scoped') { colorClass = 'bg-gray-800/70'; textColor = 'text-gray-400'; }
+
+    let severityClass = 'text-gray-400';
+    if (severity === 'High') severityClass = 'text-red-400';
+    else if (severity === 'Moderate') severityClass = 'text-yellow-400';
+    else if (severity === 'Low') severityClass = 'text-green-400';
+
+    return (
+      <div className="flex items-center space-x-2">
+        <span className={`px-2 py-0.5 text-${size} font-semibold rounded-full ${colorClass} ${textColor}`}>{isInherited ? 'INHERITED' : status}</span>
+        {severity && <span className={`text-${size} font-medium ${severityClass}`}>{severity}</span>}
+      </div>
+    );
+  };
+  
+  const TabButton = ({ id, label }) => (
+    <button
+      onClick={() => setActiveTab(id)}
+      className={`px-4 py-2 font-semibold transition-colors duration-200 border-b-2
+        ${activeTab === id
+          ? 'border-cyan-400 text-cyan-400'
+          : 'border-transparent text-gray-400 hover:text-white'
+        }`}
+        disabled={id === 'authorization' && currentRole !== 'AO'}
+    >
+      {label}
+      {id === 'authorization' && currentRole === 'AO' && <span className='ml-2 text-xs bg-red-700/50 px-2 py-0.5 rounded'>AO ONLY</span>}
+    </button>
+  );
+
+  
+  // --- Accordion/Tree Item Component for Control Review ---
+  const ControlFamilyAccordion = () => {
+    const [expandedFamilies, setExpandedFamilies] = useState({});
+
+    // Group controls by family and nest enhancements (Sub-Controls) under their parent.
+    const groupedControls = useMemo(() => {
+      const groups = {};
+      CONTROL_FAMILIES_CODES.forEach(familyCode => {
+        groups[familyCode] = {
+          title: CONTROL_FAMILIES[familyCode] || familyCode,
+          controls: new Map(), // Use a map for easy parent lookups
+          status: 'Not Scoped',
+          totalControls: 0,
+        };
+      });
+
+      // Pass 1: Build the hierarchy (Base controls + nested placeholders for enhancements)
+      controls.forEach(control => {
+        const isEnhancement = control.id.includes('(');
+        if (groups[control.family]) {
+            if (!isEnhancement) {
+                groups[control.family].controls.set(control.id, {
+                    ...control,
+                    enhancements: []
+                });
+            } else {
+                // Nest the enhancements under their parent
+                const baseIdMatch = control.id.match(/^[A-Z]{2}-\d+/);
+                if (baseIdMatch) {
+                    const baseId = baseIdMatch[0];
+                    const parentControl = groups[control.family].controls.get(baseId);
+                    if (parentControl) {
+                        parentControl.enhancements.push(control);
+                    }
+                }
+            }
+        }
+      });
+
+      // Convert the Maps back to arrays and calculate status metrics
+      Object.keys(groups).forEach(familyCode => {
+        const group = groups[familyCode];
+        group.controls = Array.from(group.controls.values());
+        
+        // Calculate total controls and status based on all nested items (base + enhancements)
+        const allItems = [...group.controls.flatMap(c => [c, ...c.enhancements])];
+        group.totalControls = allItems.length;
+
+        if (allItems.length === 0) {
+            group.status = 'Not Scoped';
+        } else if (allItems.some(c => c.status === 'Not Implemented')) {
+            group.status = 'Not Implemented';
+        } else if (allItems.some(c => c.status === 'Partially Implemented')) {
+            group.status = 'Partially Implemented';
+        } else {
+            group.status = 'Implemented';
+        }
+      });
+      
+      return groups;
+    }, [controls]);
+
+    const toggleFamily = (familyCode) => {
+      setExpandedFamilies(prev => ({
+        ...prev,
+        [familyCode]: !prev[familyCode]
+      }));
+    };
+    
+    // Function to handle control click (Level 2 & 3)
+    const toggleControlEditor = (controlId) => {
+        // Close editor if it's already open for this control
+        if (openControlId === controlId) {
+            setOpenControlId('');
+        } else {
+            setOpenControlId(controlId);
+        }
+    };
+    
+    // Function to handle local narrative change
+    const handleLocalNarrativeChange = (controlId, value) => {
+        setLocalNarrative(prev => ({ ...prev, [controlId]: value }));
+    };
+
+    // Common rendering function for both Base Control and Enhancement
+    const renderControlItem = (control, isEnhancement = false) => {
+        const isEditing = openControlId === control.id;
+        const paddingClass = isEnhancement ? 'ml-8' : 'ml-4';
+        const controlType = isEnhancement ? 'Enhancement' : 'Control';
+        const currentNarrative = localNarrative[control.id] !== undefined ? localNarrative[control.id] : control.procedure;
+
+        return (
+            <div 
+                key={control.id} 
+                className={`${paddingClass} p-3 border-l-4 my-3 rounded-md transition-all duration-150 
+                  ${isEditing 
+                    ? 'border-cyan-400 bg-gray-800 shadow-lg' 
+                    : 'border-cyan-500/30 bg-gray-900/50'
+                  }`}
+            >
+                {/* Level 2/3: Control Header - Clickable to toggle editor */}
+                <button
+                    className="w-full text-left flex justify-between items-start"
+                    onClick={() => toggleControlEditor(control.id)}
+                >
+                    <div>
+                        <h4 className={`text-md font-semibold ${isEnhancement ? 'text-gray-300' : 'text-white'}`}>
+                            {control.id} - {control.title}
+                        </h4>
+                        {/* Read-only quick view */}
+                        <div className="mt-1 text-xs text-gray-400 truncate max-w-lg">
+                            <span className="font-semibold text-cyan-300/80">{controlType} Narrative:</span> {control.procedure || 'Click to add SSP Narrative...'}
+                        </div>
+                    </div>
+                    <div className='flex flex-col items-end space-y-1'>
+                        <StatusPill status={control.status} severity={control.severity} size='xs' isInherited={control.inheritance === 'Inherited'} />
+                        {control.artifacts.length > 0 && 
+                            <span className='text-xs text-green-400/80'>{control.artifacts.length} Artifacts Mapped</span>
+                        }
+                    </div>
+                </button>
+                
+                {/* Level 3/4: Inline Editor (Appears when toggled) */}
+                {isEditing && (
+                    <div className="mt-4 p-4 border-t border-gray-700 space-y-4">
+                        <h5 className="text-sm font-semibold text-cyan-300/80">SSP Narrative ({control.id} Answer)</h5>
+                        <textarea
+                            className="w-full h-24 p-2 text-sm rounded-lg bg-gray-900 border border-gray-600 text-gray-200 focus:ring-cyan-500 focus:border-cyan-500 resize-none"
+                            value={currentNarrative}
+                            onChange={(e) => handleLocalNarrativeChange(control.id, e.target.value)}
+                            disabled={!currentRoleConfig.permissions.includes('edit_controls')}
+                        />
+
+                        <div className="flex justify-between items-center pt-2">
+                            {/* Save Button */}
+                            <button
+                                onClick={() => handleSaveNarrative(control.id, currentNarrative)}
+                                disabled={!currentRoleConfig.permissions.includes('edit_controls') || currentNarrative === control.procedure}
+                                className="cyber-button px-4 py-2 text-sm rounded-lg bg-yellow-600 hover:bg-yellow-500 text-black font-bold disabled:bg-gray-600 disabled:text-gray-400"
+                            >
+                                Save Narrative & Close Editor
+                            </button>
+                            
+                            {/* Status Override Buttons */}
+                            <div className='flex flex-wrap gap-2'>
+                                {CONTROL_STATUSES.filter(s => s !== 'Not Applicable').map(status => (
+                                    <button
+                                        key={status}
+                                        onClick={() => handleManualStatusChange(status, control.id)}
+                                        disabled={!currentRoleConfig.permissions.includes('edit_controls') || status === control.status}
+                                        className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors duration-150 ${
+                                            status === control.status 
+                                            ? 'bg-cyan-700 text-white cursor-default' 
+                                            : 'bg-gray-600 hover:bg-cyan-600 text-white'
+                                        } disabled:bg-gray-700 disabled:text-gray-400`}
+                                    >
+                                        Mark {status}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {/* Recursively render enhancements if this is a base control */}
+                {
+                    // This conditional check ensures only the base control renders its enhancements
+                    !isEnhancement && control.enhancements.length > 0 && (
+                        <div className="mt-2">
+                            {control.enhancements.map(enhancement => renderControlItem(enhancement, true))}
+                        </div>
+                    )
+                }
+              </div>
+        );
+    }
+
+    return (
+      <div className="space-y-2">
+        {CONTROL_FAMILIES_CODES.map((familyCode) => {
+            const familyData = groupedControls[familyCode];
+            if (!familyData) return null;
+
+            return (
+                <div key={familyCode} className="bg-gray-800 rounded-lg shadow-md border border-gray-700">
+                    {/* Level 1: Family Header (Clickable) */}
+                    <button
+                        className="w-full text-left p-4 flex justify-between items-center hover:bg-gray-700 transition-colors duration-150 rounded-lg"
+                        onClick={() => toggleFamily(familyCode)}
+                    >
+                        <div className='flex items-center space-x-3'>
+                            <span className={`text-xl font-bold ${familyData.totalControls > 0 ? 'text-cyan-400' : 'text-gray-500'}`}>
+                              {familyCode}
+                            </span>
+                            <span className="text-lg font-medium text-gray-300">
+                              {familyData.title} ({familyData.totalControls} Controls)
+                            </span>
+                        </div>
+                        <div className='flex items-center space-x-4'>
+                            <StatusPill status={familyData.status} size='sm' />
+                            <svg 
+                                className={`w-5 h-5 transition-transform duration-300 ${expandedFamilies[familyCode] ? 'transform rotate-90' : ''}`} 
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                    </button>
+                    
+                    {/* Level 2 & 3: Controls and Implementation Detail (Collapsible Content) */}
+                    {expandedFamilies[familyCode] && familyData.totalControls > 0 && (
+                        <div className="p-4 pt-0 border-t border-gray-700 bg-gray-900/50 rounded-b-lg">
+                            {familyData.controls.map((control) => (
+                                <div key={control.id} className='space-y-1'>
+                                    {renderControlItem(control, false)}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        })}
+      </div>
+    );
+  };
+  // --- END Accordion/Tree Component ---
+
+
+  // --- 4. RENDER LAYOUT ---
+
+  return (
+    <div className="min-h-screen p-4 md:p-8 bg-gray-900 text-white font-sans antialiased">
+      <style>{`
+        .cyber-button {
+            transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.2);
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.8);
+        }
+        .cyber-button:hover {
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+        .progress-bar {
+            background: linear-gradient(to right, #00ffff, #008080);
+        }
+      `}</style>
+
+      <header className="mb-8 border-b border-gray-700 pb-4">
+        <div className="flex justify-start items-center">
+          <h1 className="text-3xl font-bold text-cyan-400 tracking-wider">
+            ATO-in-a-Box | <span className="text-white">RMF Automation Platform</span>
+          </h1>
+          
+          <div className="hidden">
+            <select
+              value={currentRole}
+              onChange={(e) => setCurrentRole(e.target.value)}
+            >
+              {Object.entries(ROLES).map(([key, role]) => (
+                <option key={key} value={key}>{role.name} ({key})</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </header>
+      
+      {/* Messaging Area */}
+      {message && (
+        <div className={`p-4 rounded-lg mb-6 ${message.type === 'error' ? 'bg-red-900/50 text-red-300 border-red-500' : message.type === 'success' ? 'bg-green-900/50 text-green-300 border-green-500' : 'bg-blue-900/50 text-blue-300 border-blue-500'} border`} role="alert">
+          {message.text}
+        </div>
+      )}
+
+      {/* Tabs Navigation */}
+      <div className="border-b border-gray-700 mb-6 flex space-x-4">
+        <TabButton id="dashboard" label="RMF Dashboard" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
+        <TabButton id="controls" label="Control Review (NIST 800-53)" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
+        <TabButton id="poam" label="POA&M Automation" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
+        <TabButton id="risk" label="Risk Register" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
+        <TabButton id="audit" label="Audit Trail" activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
+      </div>
+
+      <div className="space-y-8">
+        {/* --- DASHBOARD VIEW --- */}
+        {activeTab === 'dashboard' && (
+          <div>
+            <h2 className="text-2xl font-semibold mb-6 text-white border-l-4 border-cyan-400 pl-3">ATO Readiness Scorecard </h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <MetricCard title="Compliance Score" value={complianceScore} unit="%" className="col-span-2 md:col-span-1" />
+              <MetricCard title="Total Controls" value={total} className="col-span-2 md:col-span-1" />
+              <MetricCard title="Unaddressed Controls" value={controls.filter(c => c.status === 'Not Implemented').length} className="col-span-2 md:col-span-1" />
+              <MetricCard title="Risk Posture" value={riskPosture} className={`col-span-2 md:col-span-1 ${riskPosture.includes('High') ? 'bg-red-900/50' : riskPosture.includes('Moderate') ? 'bg-yellow-900/50' : 'bg-green-900/50'}`} />
+
+              <div className="md:col-span-4 p-6 rounded-xl shadow-xl bg-white/10 border border-gray-700/50">
+                  <h3 className="text-xl font-semibold mb-4 text-cyan-400">Compliance Heat Map (1,189 Controls Scoped)</h3>
+                  <p className="text-lg mb-2">Controls Implemented: <span className="font-bold text-green-400">{implemented}</span> / <span className="font-bold">{total}</span></p>
+                  <div className="h-4 w-full bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                          className="h-full progress-bar" 
+                          style={{ width: `${complianceScore}%` }}
+                      ></div>
+                  </div>
+                  <p className="mt-4 text-sm text-gray-400">
+                    *Compliance Score factors in Partially Implemented controls (50% credit). Next milestone: 85% for High Readiness.
+                  </p>
+              </div>
+
+              {/* CCM Trigger for ISSM/ISSO */}
+              <div className="md:col-span-4 p-6 rounded-xl shadow-xl bg-gray-800 border border-cyan-500/50">
+                  <h3 className="text-xl font-semibold mb-3 text-cyan-400">Continuous Control Monitoring (CCM)</h3>
+                  <p className='text-sm text-gray-400 mb-4'>
+                    Trigger the real-time scan (simulating integration with SIEM/Configuration Management tools) to check live status of technical controls (e.g., CM-6, IR-4, AU-6).
+                  </p>
+                  <button
+                      onClick={runContinuousMonitoring}
+                      disabled={isProcessing || !currentRoleConfig.permissions.includes('view_all')}
+                      className="cyber-button px-6 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold disabled:bg-gray-600 disabled:shadow-none"
+                  >
+                      {isProcessing ? 'Running Live Scan...' : 'Run Continuous Monitoring Check'}
+                  </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* --- CONTROL REVIEW VIEW --- */}
+        {activeTab === 'controls' && (
+          <div className='grid grid-cols-1 lg:grid-cols-1 gap-8'>
+            <div className="lg:col-span-1">
+                <h2 className="text-2xl font-semibold mb-6 text-white border-l-4 border-cyan-400 pl-3">NIST SP 800-53 Control Inventory & SSP Editor (1,189 Items)</h2>
+                
+                {/* AI/NLP Ingestion Panel */}
+                <div className='mt-4 p-6 rounded-xl bg-gray-800 border border-cyan-500/50 shadow-2xl'>
+                    <h3 className='text-xl font-semibold mb-3 text-cyan-400'>Automated Documentation Analysis (AI/NLP + CCI)</h3>
+                    <p className='text-sm text-gray-400 mb-4'>
+                        Upload policy documents (simulated OCR) to trigger the RAG engine for targeted SSP narrative extraction and the CCI engine for technical compliance status updates.
+                    </p>
+                    
+                    {/* Simulated File Upload Input */}
+                    <div className='flex items-center space-x-4'>
+                        <label htmlFor="file-upload" className="cyber-button cursor-pointer px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm disabled:bg-gray-600 disabled:shadow-none">
+                            {fileName ? `Policy File: ${fileName}` : 'Upload Policy Document (OCR Prerequisite)'}
+                        </label>
+                        <input
+                            id="file-upload"
+                            type="file"
+                            className="hidden"
+                            onChange={handleFileChange}
+                            disabled={isProcessing || !currentRoleConfig.permissions.includes('update_evidence')}
+                        />
+                        
+                        <button
+                            onClick={handleDocumentUpload}
+                            disabled={isProcessing || !fileName || !currentRoleConfig.permissions.includes('update_evidence')}
+                            className="cyber-button px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold disabled:bg-gray-600 disabled:shadow-none"
+                        >
+                            {isProcessing ? 'Analyzing Evidence...' : 'Analyze & Auto-Populate Controls'}
+                        </button>
+                        {!currentRoleConfig.permissions.includes('update_evidence') && (
+                            <p className='text-red-400 text-sm'>Access Denied</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* eMASS Baseline Import Panel */}
+                <div className='mt-6 p-6 rounded-xl bg-gray-800 border border-yellow-500/50 shadow-2xl'>
+                    <h3 className='text-xl font-semibold mb-3 text-yellow-400'>Import Existing eMASS Baseline</h3>
+                    <p className='text-sm text-gray-400 mb-4'>
+                        Use this feature to load inherited controls and previous SSP narratives from a structured CSV export (e.g., your "Main Control Matrix").
+                    </p>
+                    <input
+                        id="emass-upload"
+                        type="file"
+                        accept=".csv"
+                        onChange={handleEmassBaselineUpload}
+                        disabled={!currentRoleConfig.permissions.includes('edit_controls')}
+                        className="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600 disabled:opacity-50"
+                    />
+                </div>
+                
+                {/* Control Tree View */}
+                <ControlFamilyAccordion />
+            </div>
+          </div>
+        )}
+
+        {/* --- POA&M AUTOMATION VIEW --- */}
+        {activeTab === 'poam' && (
+          <div>
+            <h2 className="text-2xl font-semibold mb-6 text-white border-l-4 border-cyan-400 pl-3">Plan of Action & Milestones (POA&M) Automation</h2>
+            
+            <div className='flex items-center justify-between p-4 bg-gray-800 rounded-t-xl border-b border-gray-700'>
+              <p className='text-gray-300 font-medium'>Total Deficiencies Logged: <span className='text-cyan-400 font-bold'>{poamList.length}</span></p>
+              <button
+                  onClick={generatePOAandM}
+                  disabled={!currentRoleConfig.permissions.includes('edit_controls')}
+                  className="cyber-button px-6 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-sm disabled:bg-gray-600 disabled:shadow-none"
+              >
+                  Generate New POA&M Entries
+              </button>
+            </div>
+
+            <PoamTable />
+            
+            <div className='mt-8 p-6 rounded-xl bg-gray-800 border border-gray-600 shadow-2xl'>
+                <h3 className='text-xl font-semibold mb-3 text-white'>Export & Integration APIs </h3>
+                <p className='text-sm text-gray-400 mb-4'>Finalize the ATO package for external ingestion into systems like eMASS or Xacta.</p>
+                
+                {/* NEW: eMASS Exports */}
+                <div className='border-t border-b border-gray-700 py-4 mb-4'>
+                    <h4 className='text-lg font-medium text-cyan-400 mb-3'>eMASS CSV Data Ingestion Files</h4>
+                    <p className='text-sm text-gray-400 mb-4'>
+                        Generates the two primary CSV files required for eMASS import: Controls (SSP) and POA&M.
+                    </p>
+                    <div className='flex flex-wrap gap-4'>
+                        <button
+                            onClick={exportControlsToEmassCsv}
+                            disabled={!currentRoleConfig.permissions.includes('edit_controls')}
+                            className="cyber-button px-6 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold disabled:bg-gray-600"
+                        >
+                            Export **Security Controls** CSV
+                        </button>
+                        <button
+                            onClick={exportPoamToEmassCsv}
+                            disabled={!currentRoleConfig.permissions.includes('edit_controls')}
+                            className="cyber-button px-6 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold disabled:bg-gray-600"
+                        >
+                            Export **POA&M** CSV
+                        </button>
+                    </div>
+                </div>
+
+                {/* Existing: ATO Package Export */}
+                <div className='mt-4'>
+                    <h4 className='text-lg font-medium text-cyan-400 mb-3'>Final ATO Package Export (OSCAL/FedRAMP)</h4>
+                    <div className='flex space-x-4'>
+                        <button
+                            onClick={() => handleExport('OSCAL_eMASS')}
+                            className="cyber-button px-6 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold disabled:bg-gray-600"
+                        >
+                            Export OSCAL / Xacta Package (.json)
+                        </button>
+                        <button
+                            onClick={() => handleExport('FedRAMP_Template')}
+                            className="cyber-button px-6 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold disabled:bg-gray-600"
+                        >
+                            Generate FedRAMP Word/Excel Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- CROSS-WALK MAPPING VIEW --- */}
+        {activeTab === 'mapping' && <HarmonizationView />}
+        
+        {/* --- RISK REGISTER VIEW --- */}
+        {activeTab === 'risk' && <RiskRegisterView />}
+
+        {/* --- AUDIT TRAIL VIEW --- */}
+        {activeTab === 'audit' && <AuditTrailView />}
+      </div>
+    </div>
+  );
+};
