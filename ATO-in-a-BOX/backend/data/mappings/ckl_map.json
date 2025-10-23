@@ -1,0 +1,25 @@
+[
+    {
+        "stig_id": "SV-84883r2_rule",
+        "title": "Windows must automatically lock the session when the screen saver is activated.",
+        "nist_controls": [
+            {
+                "control_id": "AC-11",
+                "details": "Session lock controls access during inactivity."
+            }
+        ],
+        "default_status": "Partially Implemented"
+    },
+    {
+        "stig_id": "V-78197",
+        "title": "Ensure all non-vendor accounts have strong passwords.",
+        "nist_controls": [
+            {
+                "control_id": "IA-5 (1)",
+                "details": "Password complexity enforcement."
+            }
+        ],
+        "default_status": "Not Implemented"
+    }
+    // ... many more entries ...
+]

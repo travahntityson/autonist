@@ -1,0 +1,25 @@
+[
+    {
+        "scap_id": "V-73603",
+        "description": "The system must be configured to lock out accounts after 3 failed login attempts.",
+        "nist_controls": [
+            {
+                "control_id": "IA-4 (4)",
+                "details": "Enforces failed login attempts."
+            }
+        ],
+        "default_status": "Not Implemented"
+    },
+    {
+        "scap_id": "CCE-26880-9",
+        "description": "Ensure 'Account lockout duration' is set to '10' or greater.",
+        "nist_controls": [
+            {
+                "control_id": "AC-12",
+                "details": "Session termination."
+            }
+        ],
+        "default_status": "Implemented"
+    }
+    // ... many more entries ...
+]

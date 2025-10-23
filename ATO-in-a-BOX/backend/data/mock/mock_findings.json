@@ -1,0 +1,45 @@
+{
+    "nlp_analysis_results": [
+        {
+            "control_id": "AC-2",
+            "update_type": "SSP_NARRATIVE",
+            "new_narrative": "The organization requires all users to be explicitly authorized before accessing information systems, a process documented in the Authorization Boundary.",
+            "source_document": "Policy_Manual_v2.1.pdf",
+            "confidence": 0.95
+        },
+        {
+            "control_id": "CM-6",
+            "update_type": "SSP_NARRATIVE",
+            "new_narrative": "System changes are reviewed and approved by the Change Control Board (CCB) prior to implementation, following ticket workflow documented in JIRA.",
+            "source_document": "Configuration_Mgmt_Plan.docx",
+            "confidence": 0.88
+        }
+    ],
+    "ccm_scan_results": [
+        {
+            "control_id": "AC-17",
+            "update_type": "CONTROL_STATUS",
+            "new_status": "Implemented",
+            "reason": "VPN connection logs show all sessions use TLS 1.2+."
+        },
+        {
+            "control_id": "IA-5",
+            "update_type": "CONTROL_STATUS",
+            "new_status": "Partially Implemented",
+            "reason": "Password length policy is 10 characters, but complexity rules are not fully enforced."
+        },
+        {
+            "control_id": "AU-2",
+            "update_type": "CONTROL_STATUS",
+            "new_status": "Not Implemented",
+            "reason": "Audit logs are not archived off-system within 7 days."
+        },
+        {
+            "control_id": "CM-7",
+            "update_type": "POAM_ENTRY",
+            "finding_title": "Critical Patch Missing on Web Server",
+            "severity": "High",
+            "description": "CVE-2023-451 detected; requires immediate patching to comply with CM-7."
+        }
+    ]
+}

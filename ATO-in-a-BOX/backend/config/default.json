@@ -1,0 +1,26 @@
+{
+    "server": {
+        "env": "development",
+        "logLevel": "info"
+    },
+    "database": {
+        "dialect": "postgres"
+    },
+    "security": {
+        "tokenExpiration": "1h",
+        "xssSanitization": true
+    },
+    "services": {
+        "nlp": {
+            "mockEnabled": true,
+            "url": "http://localhost:5000/api/analyze",
+            "timeout": 15000
+        },
+        "ccm": {
+            "url": "http://localhost:5001/api/scan"
+        }
+    },
+    "frontend": {
+        "url": "http://localhost:5173" 
+    }
+}

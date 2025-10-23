@@ -1,0 +1,24 @@
+[
+    {
+        "nessus_plugin_id": 10394,
+        "plugin_name": "Microsoft Windows SMB Signing Required",
+        "nist_controls": [
+            {
+                "control_id": "AC-17 (1)",
+                "details": "Requires secure protocols for remote access."
+            },
+            {
+                "control_id": "SC-8 (1)",
+                "details": "Protects integrity of communications."
+            }
+        ],
+        "default_status": "Partially Implemented"
+    },
+    {
+        "nessus_plugin_id": 19506,
+        "plugin_name": "Nessus Scan Information",
+        "nist_controls": [],
+        "default_status": "Not Applicable"
+    }
+    // ... many more entries ...
+]

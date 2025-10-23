@@ -1,0 +1,9 @@
+/* src/styles/globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* * Optional: You can also add your custom global styles here, 
+ * like font families, or the custom 'cyber-button' style if you aren't using a separate file for it.
+ */
