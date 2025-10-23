@@ -1,0 +1,26 @@
+# 1. CHANGED: Use a FIPS-capable base image
+FROM registry.access.redhat.com/ubi9/nodejs-18:latest
+
+# 2. Set the working directory
+WORKDIR /usr/src/app
+
+# 3. Copy package.json and install dependencies
+# (This part remains the same)
+COPY backend/package*.json ./
+RUN npm install
+
+# 4. Copy the rest of your backend source code
+COPY ./backend /usr/src/app
+
+# 5. Copy your entrypoint script (from your original file)
+COPY Docker/entrypoint.sh /usr/src/app/entrypoint.sh
+RUN chmod +x /usr/src/app/entrypoint.sh
+
+# 6. Expose the port (from your original file)
+EXPOSE 3001
+
+# 7. Use your entrypoint script (from your original file)
+ENTRYPOINT [ "/usr/src/app/entrypoint.sh" ]
+
+# 8. CMD is just a fallback (from your original file)
+CMD [ "node", "server.js" ]

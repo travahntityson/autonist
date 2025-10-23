@@ -1,0 +1,13 @@
+Section 3.1: Access Control Policy (AC-2, AC-3)
+
+The organization strictly enforces the principle of least privilege. Access to all critical information systems, including the AtoNIST database, is granted only after explicit authorization by the Information System Security Manager (ISSM). All user accounts are uniquely identified and authentication is mandatory.
+
+Furthermore, remote access to the system requires the use of multi-factor authentication (MFA) and is restricted to approved organizational networks only (AC-17). The system is configured to automatically terminate sessions after 15 minutes of inactivity to prevent unauthorized access to unattended terminals (AC-12).
+
+Section 5.2: Configuration Management (CM-6)
+
+All changes to the baseline configuration of the operating system and application components must follow the formal Change Control Board (CCB) process. A formal change ticket must be approved before deployment. The security team performs weekly scanning using Nessus to identify unauthorized software and critical missing patches, ensuring compliance with CM-7.
+
+Section 8.0: Audit and Accountability (AU-2)
+
+The system generates audit records for all security-relevant events, including system startup/shutdown, privileged actions, and failed access attempts. These audit logs are reviewed daily by the ISSO, and logs are archived off the active system every 30 days to a secure, immutable storage location (AU-9).

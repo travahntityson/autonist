@@ -1,0 +1,24 @@
+{
+    "database": {
+        "name": "atonist_dev_db" 
+        // Use a separate database name for development to prevent accidental data corruption
+        // in a shared staging/production database.
+    },
+    "services": {
+        "nlp": {
+            "mockEnabled": true,
+            // Keep mock mode ON by default in development for faster unit testing and UI development
+            "url": "http://localhost:5000/api/analyze"
+        },
+        "ccm": {
+            "timeout": 5000 
+            // Maybe give a shorter timeout for local testing of Continuous Monitoring 
+        }
+    },
+    "security": {
+        "logApiCalls": true,
+        "xssSanitization": false
+        // Sometimes disabling XSS sanitization in dev is necessary to debug raw data flows, 
+        // but it should ALWAYS be true in staging/production.
+    }
+}

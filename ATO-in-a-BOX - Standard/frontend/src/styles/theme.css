@@ -1,0 +1,18 @@
+/* src/styles/theme.css */
+
+:root {
+  /* Define your primary colors as variables */
+  --color-primary: #00ffff;  /* Cyan */
+  --color-background: #111827; /* Gray-900 */
+  --color-accent: #3b82f6; /* Blue-500 */
+}
+
+/* You could then use these in your CSS, or configure Tailwind to read them */
+.app-container {
+  background-color: var(--color-background);
+}
+
+/* Example: Styling the neon glow defined in App.jsx's <style> tag */
+.cyber-button {
+  border: 1px solid var(--color-primary);
+}

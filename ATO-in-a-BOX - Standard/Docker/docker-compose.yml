@@ -1,0 +1,33 @@
+backend-service:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.backend
+    container_name: rmf_backend
+    restart: unless-stopped
+    ports:
+      # Use the variable from .env
+      - "${PORT}:${PORT}"
+    depends_on:
+      database-service:
+        condition: service_healthy
+      ai-service: 
+        condition: service_healthy 
+    environment:
+      - NODE_OPTIONS=--fips-mode=1
+      - NLP_SERVICE_URL=http://ai-service:11434/api/generate
+      - NODE_ENV=production
+      
+      # MODIFIED: Read all variables from the .env file
+      - PORT=${PORT}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - DB_HOST=database-service
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - JWT_SECRET=${JWT_SECRET}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

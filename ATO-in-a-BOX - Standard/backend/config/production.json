@@ -1,0 +1,34 @@
+{
+    "server": {
+        "env": "production",
+        "logLevel": "error"
+        // Only log critical errors to reduce noise and I/O overhead
+    },
+    "database": {
+        // ASSUMPTION: This is a secure remote database URL, NOT localhost
+        "host": "production.db.yourhost.com", 
+        "uri": "mongodb+srv://<user>:<password>@production-cluster-uri/atonist_prod_db?retryWrites=true"
+    },
+    "security": {
+        "logApiCalls": false,
+        "xssSanitization": true,
+        "rateLimit": {
+            "windowMs": 60000,
+            "max": 100
+        }
+    },
+    "services": {
+        "nlp": {
+            "mockEnabled": false,
+            // CRITICAL: Turn OFF the mock and use the real RAG service in production
+            "url": "https://api.rag-service.yourdomain.com/analyze"
+        },
+        "ccm": {
+            "timeout": 30000 
+            // Give longer timeouts for complex, production-scale CCM scans
+        }
+    },
+    "frontend": {
+        "url": "https://app.yourdomain.com"
+    }
+}
